@@ -1,4 +1,7 @@
+/* editorial-ui · Cristian Pérez · cristianperez.me */
 import { STRENGTH_LEVELS } from '../lib/analysis.js'
+import { levelColor } from '../lib/levelStyles.js'
+import { RollingNumber } from './RollingNumber.jsx'
 
 /** Marcas visuales en los umbrales de clasificación (la barra llega a 128 bits). */
 const THRESHOLDS = STRENGTH_LEVELS.filter((level) => Number.isFinite(level.max)).map(
@@ -8,58 +11,68 @@ const THRESHOLDS = STRENGTH_LEVELS.filter((level) => Number.isFinite(level.max))
 export function StrengthMeter({ analysis, compact = false }) {
   const { entropy, level, percent, length } = analysis
   const empty = length === 0
+  const color = levelColor(analysis)
+  const fill = empty ? 0 : Math.max(percent, 3) / 100
 
   return (
     <div>
       <div className="flex items-end justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="min-w-0">
           <span
-            className={`rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide ring-1 ring-inset ${
-              empty ? 'bg-slate-500/10 text-slate-400 ring-slate-600/40' : level.chip
-            }`}
+            className="font-semiwide inline-flex items-center gap-2 text-[15px] font-bold tracking-tight transition-colors duration-500"
+            style={{ color }}
           >
+            <span
+              aria-hidden
+              className="size-2 shrink-0 rotate-45 transition-colors duration-500"
+              style={{ background: color }}
+            />
             {empty ? 'Sin evaluar' : level.label}
           </span>
           {!compact && !empty ? (
-            <span className="hidden text-xs text-slate-500 sm:inline">{level.summary}</span>
+            <p className="mt-1 text-[14px] leading-snug text-steel-400">{level.summary}</p>
           ) : null}
         </div>
 
-        <div className="shrink-0 text-right">
-          <span className={`font-mono text-base font-semibold ${empty ? 'text-slate-600' : level.text}`}>
-            {entropy.toFixed(1)}
+        <div className="shrink-0 text-right leading-none">
+          <span
+            className="font-mono text-[1.9rem] font-semibold tracking-tight transition-colors duration-500 sm:text-4xl"
+            style={{ color: empty ? 'var(--color-steel-500)' : color }}
+          >
+            <RollingNumber value={entropy.toFixed(1)} />
           </span>
-          <span className="ml-1 font-mono text-[11px] text-slate-500">bits</span>
+          <span className="ml-1.5 font-mono text-[13px] text-steel-500">bits</span>
         </div>
       </div>
 
-      <div className="relative mt-2.5 h-2 overflow-hidden rounded-full bg-slate-800/80 ring-1 ring-inset ring-white/5">
+      {/* Escala: la barra se llena con scaleX (sin animar el ancho). */}
+      <div className="relative mt-4 h-2.5 overflow-hidden rounded-full bg-steel-950 ring-1 ring-inset ring-white/[0.06]">
         <div
-          className={`h-full rounded-full bg-gradient-to-r transition-all duration-500 ease-out ${level.bar}`}
-          style={{ width: `${empty ? 0 : Math.max(percent, 3)}%` }}
+          className="absolute inset-0 origin-left rounded-full transition-[transform,background-color] duration-700 ease-[var(--ease-out-soft)]"
+          style={{ transform: `scaleX(${fill})`, background: color }}
         />
 
         {THRESHOLDS.map(({ bits, percent: mark }) => (
           <span
             key={bits}
-            className="absolute top-0 h-full w-px bg-abyss-900/70"
+            className="absolute top-0 h-full w-[3px] -translate-x-1/2 bg-steel-900"
             style={{ left: `${mark}%` }}
           />
         ))}
       </div>
 
       {!compact ? (
-        <div className="relative mt-1.5 hidden h-3 sm:block">
+        <div className="relative mt-2 h-4">
           {THRESHOLDS.map(({ bits, percent: mark }) => (
             <span
               key={bits}
-              className="absolute -translate-x-1/2 font-mono text-[10px] text-slate-600"
+              className="absolute -translate-x-1/2 font-mono text-[13px] text-steel-500"
               style={{ left: `${mark}%` }}
             >
               {bits}
             </span>
           ))}
-          <span className="absolute right-0 font-mono text-[10px] text-slate-600">128+</span>
+          <span className="absolute right-0 font-mono text-[13px] text-steel-500">128+</span>
         </div>
       ) : null}
     </div>

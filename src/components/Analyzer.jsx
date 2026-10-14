@@ -1,3 +1,4 @@
+/* editorial-ui · Cristian Pérez · cristianperez.me */
 import {
   Binary,
   CircleCheck,
@@ -13,10 +14,16 @@ import {
   ShieldAlert,
   Type,
 } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useId, useState } from 'react'
 import { formatCount } from '../lib/analysis.js'
+import { levelColor } from '../lib/levelStyles.js'
+import { KeyBlade } from './KeyBlade.jsx'
+import { RollingNumber } from './RollingNumber.jsx'
 import { StrengthMeter } from './StrengthMeter.jsx'
 import { Card, SectionTitle, Stat } from './ui.jsx'
+
+const ease = [0.22, 1, 0.36, 1]
 
 const SCENARIO_ICONS = {
   online: Globe,
@@ -25,29 +32,47 @@ const SCENARIO_ICONS = {
 }
 
 function PatternChips({ patterns }) {
-  if (patterns.all.length === 0) return null
-
   return (
-    <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/5 p-3.5">
-      <p className="flex items-center gap-1.5 text-[11px] font-semibold text-rose-300">
-        <ShieldAlert className="size-3.5" strokeWidth={2.5} />
-        Fragmentos predecibles detectados
-      </p>
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {patterns.all.map((hit) => (
-          <code
-            key={hit}
-            className="rounded-md bg-rose-500/10 px-1.5 py-0.5 font-mono text-[11px] text-rose-200 ring-1 ring-rose-500/25"
-          >
-            {hit}
-          </code>
-        ))}
-      </div>
-      <p className="mt-2 text-[11px] leading-relaxed text-rose-200/60">
-        Un ataque con reglas de diccionario prueba estas variantes antes que la fuerza bruta, así
-        que la entropía efectiva mostrada ya está penalizada.
-      </p>
-    </div>
+    <AnimatePresence initial={false}>
+      {patterns.all.length > 0 ? (
+        <motion.div
+          key="patterns"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.35, ease }}
+          className="overflow-hidden"
+        >
+          <div className="mt-5 border-l-2 border-[color:var(--color-weak)] bg-[color:var(--color-weak)]/[0.07] py-4 pr-4 pl-4">
+            <p className="flex items-center gap-2 text-[15px] font-semibold text-[color:var(--color-weak)]">
+              <ShieldAlert className="size-[18px] shrink-0" strokeWidth={2.2} />
+              Fragmentos predecibles detectados
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <AnimatePresence initial={false} mode="popLayout">
+                {patterns.all.map((hit) => (
+                  <motion.code
+                    key={hit}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.22, ease }}
+                    className="rounded-md bg-steel-950 px-2 py-1 font-mono text-[14px] text-[#f2b2a8] ring-1 ring-[color:var(--color-weak)]/35"
+                  >
+                    {hit}
+                  </motion.code>
+                ))}
+              </AnimatePresence>
+            </div>
+            <p className="mt-3 text-[14px] leading-relaxed text-steel-400">
+              Un ataque con reglas de diccionario prueba estas variantes antes que la fuerza bruta, así
+              que la entropía efectiva mostrada ya está penalizada.
+            </p>
+          </div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   )
 }
 
@@ -55,22 +80,28 @@ export function Analyzer({ value, onChange, analysis }) {
   const [revealed, setRevealed] = useState(true)
   const inputId = useId()
   const empty = analysis.length === 0
+  const color = levelColor(analysis)
 
   return (
-    <div className="grid gap-4 lg:grid-cols-5">
-      <div className="flex flex-col gap-4 lg:col-span-3">
-        <Card>
+    <div className="grid items-start gap-4 sm:gap-5 lg:grid-cols-5">
+      <div className="flex flex-col gap-4 sm:gap-5 lg:col-span-3">
+        <Card raised className="enter" style={{ animationDelay: '60ms' }}>
           <SectionTitle
             icon={ScanSearch}
             title="Auditar una contraseña"
             description="Escribe o pega una clave. Todo el cálculo ocurre en tu navegador: no hay peticiones de red."
           />
 
-          <div className="relative">
+          <KeyBlade value={value} className="mb-5 pr-1" />
+
+          <div className="group relative">
             <Lock
-              className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-slate-600"
+              className="pointer-events-none absolute top-1/2 left-4 size-[18px] -translate-y-1/2 text-steel-500 transition-colors group-focus-within:text-brass-400"
               strokeWidth={2}
             />
+            <label htmlFor={inputId} className="sr-only">
+              Contraseña a evaluar
+            </label>
             <input
               id={inputId}
               type={revealed ? 'text' : 'password'}
@@ -81,31 +112,40 @@ export function Analyzer({ value, onChange, analysis }) {
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
-              className="w-full rounded-xl border border-white/10 bg-abyss-950/60 py-3.5 pr-12 pl-11 font-mono text-sm text-slate-100 placeholder:font-sans placeholder:text-slate-600 transition-colors focus:border-cyan-400/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+              className="min-h-15 w-full rounded-2xl bg-steel-950 py-4 pr-14 pl-12 font-mono text-[17px] text-steel-100 ring-1 ring-white/[0.08] transition-[box-shadow] duration-200 ring-inset placeholder:font-sans placeholder:text-steel-500 focus:ring-2 focus:ring-brass-400/70 focus:outline-none sm:text-lg"
             />
             <button
               type="button"
               onClick={() => setRevealed((current) => !current)}
               aria-label={revealed ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-              className="absolute top-1/2 right-3 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-white/5 hover:text-slate-300 focus-visible:outline-2 focus-visible:outline-cyan-400/70"
+              className="absolute top-1/2 right-2 grid size-11 -translate-y-1/2 place-items-center rounded-xl text-steel-400 transition-[background-color,color,transform] active:scale-95 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-steel-100"
             >
-              {revealed ? <EyeOff className="size-4" strokeWidth={2} /> : <Eye className="size-4" strokeWidth={2} />}
+              {revealed ? (
+                <EyeOff className="size-[18px] shrink-0" strokeWidth={2} />
+              ) : (
+                <Eye className="size-[18px] shrink-0" strokeWidth={2} />
+              )}
             </button>
           </div>
 
-          <div className="mt-5 rounded-xl border border-white/8 bg-white/2 p-4">
+          <div className="mt-6 border-t border-white/[0.06] pt-5">
             <StrengthMeter analysis={analysis} />
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-            <Stat icon={Type} label="Longitud" value={analysis.length} unit="car." />
-            <Stat icon={Fingerprint} label="Alfabeto R" value={analysis.pool || 0} unit="símb." />
+          <div className="mt-5 grid grid-cols-2 gap-x-5 gap-y-5 border-t border-white/[0.06] pt-5 sm:grid-cols-[1fr_1fr_1fr_1.45fr]">
+            <Stat icon={Type} label="Longitud" value={<RollingNumber value={analysis.length} />} unit="car." />
+            <Stat
+              icon={Fingerprint}
+              label="Alfabeto R"
+              value={<RollingNumber value={analysis.pool || 0} />}
+              unit="símb."
+            />
             <Stat
               icon={Binary}
               label="Entropía"
-              value={analysis.entropy.toFixed(1)}
+              value={<RollingNumber value={analysis.entropy.toFixed(1)} />}
               unit="bits"
-              accent={empty ? 'text-slate-600' : analysis.level.text}
+              accent={empty ? 'var(--color-steel-500)' : color}
             />
             <Stat
               icon={Cpu}
@@ -114,7 +154,7 @@ export function Analyzer({ value, onChange, analysis }) {
             />
           </div>
 
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+          <p className="mt-5 text-[14px] leading-relaxed text-steel-500">
             R se estima desde la composición observada, asumiendo el alfabeto ASCII completo de cada
             tipo presente (26 + 26 + 10 + 33): es la hipótesis que haría un atacante que conoce el
             formato de la clave.
@@ -123,46 +163,42 @@ export function Analyzer({ value, onChange, analysis }) {
           <PatternChips patterns={analysis.patterns} />
         </Card>
 
-        <Card>
+        <Card className="enter" style={{ animationDelay: '160ms' }}>
           <SectionTitle
             icon={Cpu}
             title="Coste estimado de un ataque de fuerza bruta"
             description="Caso medio (2^E / 2 intentos). Sin salt fuerte ni KDF lento: el hash marca el ritmo."
           />
 
-          <ul className="space-y-2">
+          <ul className="border-t border-white/[0.06]">
             {analysis.scenarios.map((scenario) => {
               const Icon = SCENARIO_ICONS[scenario.id]
               return (
                 <li
                   key={scenario.id}
-                  className={`flex items-center gap-3 rounded-xl border p-3.5 transition-colors ${
-                    scenario.primary
-                      ? 'border-cyan-400/25 bg-cyan-500/5'
-                      : 'border-white/8 bg-white/2'
+                  className={`relative flex items-center gap-3.5 border-b border-white/[0.06] py-4 transition-colors sm:gap-4 ${
+                    scenario.primary ? 'bg-brass-400/[0.05] pr-3 pl-4' : 'px-1'
                   }`}
                 >
-                  <span
-                    className={`grid size-9 shrink-0 place-items-center rounded-lg ${
-                      scenario.primary
-                        ? 'bg-cyan-500/15 text-cyan-300'
-                        : 'bg-white/5 text-slate-500'
-                    }`}
-                  >
-                    <Icon className="size-4" strokeWidth={2} />
-                  </span>
+                  {scenario.primary ? (
+                    <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-brass-400" />
+                  ) : null}
+                  <Icon
+                    className={`size-5 shrink-0 ${scenario.primary ? 'text-brass-400' : 'text-steel-500'}`}
+                    strokeWidth={2}
+                  />
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-medium text-slate-200">{scenario.label}</p>
-                    <p className="truncate font-mono text-[10px] text-slate-500">{scenario.detail}</p>
+                    <p className="text-[15px] leading-snug font-medium text-steel-100">{scenario.label}</p>
+                    <p className="mt-0.5 font-mono text-[12.5px] leading-snug text-steel-500">{scenario.detail}</p>
                   </div>
 
                   <span
-                    className={`shrink-0 text-right font-mono text-xs font-semibold ${
-                      empty ? 'text-slate-600' : scenario.primary ? 'text-cyan-300' : 'text-slate-300'
+                    className={`max-w-[42%] shrink-0 text-right font-mono text-[15px] leading-snug font-semibold sm:text-base ${
+                      empty ? 'text-steel-500' : scenario.primary ? 'text-brass-300' : 'text-steel-200'
                     }`}
                   >
-                    {empty ? '—' : scenario.human}
+                    <RollingNumber value={empty ? '—' : scenario.human} />
                   </span>
                 </li>
               )
@@ -171,48 +207,60 @@ export function Analyzer({ value, onChange, analysis }) {
         </Card>
       </div>
 
-      <Card className="lg:col-span-2">
+      <Card className="enter lg:sticky lg:top-24 lg:col-span-2" style={{ animationDelay: '240ms' }}>
         <SectionTitle
           icon={CircleCheck}
           title="Checklist de validación"
           description="Comprobaciones en vivo sobre composición y patrones conocidos."
         />
 
-        <ul className="space-y-1.5">
-          {analysis.checklist.map((item) => (
-            <li
-              key={item.id}
-              className={`flex items-start gap-3 rounded-xl border p-3 transition-colors duration-300 ${
-                empty
-                  ? 'border-white/5 bg-white/2 opacity-50'
-                  : item.passed
-                    ? 'border-emerald-500/20 bg-emerald-500/5'
-                    : 'border-rose-500/20 bg-rose-500/5'
-              }`}
-            >
-              {item.passed && !empty ? (
-                <CircleCheck className="mt-0.5 size-4 shrink-0 text-emerald-400" strokeWidth={2.2} />
-              ) : (
-                <CircleX
-                  className={`mt-0.5 size-4 shrink-0 ${empty ? 'text-slate-600' : 'text-rose-400'}`}
-                  strokeWidth={2.2}
-                />
-              )}
+        <ul className="border-t border-white/[0.06]">
+          {analysis.checklist.map((item, index) => {
+            const state = empty ? 'empty' : item.passed ? 'pass' : 'fail'
+            return (
+              <li
+                key={item.id}
+                className={`flex items-start gap-3.5 border-b border-white/[0.06] py-3.5 transition-opacity duration-300 ${
+                  empty ? 'opacity-55' : ''
+                }`}
+              >
+                <span className="relative mt-0.5 grid size-5 shrink-0 place-items-center">
+                  <AnimatePresence initial={false} mode="popLayout">
+                    <motion.span
+                      key={state}
+                      initial={{ scale: 0.6, opacity: 0, rotate: -30 }}
+                      animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                      exit={{ scale: 0.6, opacity: 0 }}
+                      transition={{ type: 'spring', stiffness: 520, damping: 26, delay: index * 0.035 }}
+                      className="grid place-items-center"
+                    >
+                      {state === 'pass' ? (
+                        <CircleCheck className="size-5 text-[color:var(--color-strong)]" strokeWidth={2.2} />
+                      ) : (
+                        <CircleX
+                          className={`size-5 ${state === 'empty' ? 'text-steel-500' : 'text-[color:var(--color-weak)]'}`}
+                          strokeWidth={2.2}
+                        />
+                      )}
+                    </motion.span>
+                  </AnimatePresence>
+                </span>
 
-              <div className="min-w-0">
-                <p
-                  className={`text-xs font-medium ${
-                    empty ? 'text-slate-500' : item.passed ? 'text-emerald-100' : 'text-rose-100'
-                  }`}
-                >
-                  {item.label}
-                </p>
-                {!empty ? (
-                  <p className="mt-0.5 text-[11px] leading-relaxed text-slate-400">{item.hint}</p>
-                ) : null}
-              </div>
-            </li>
-          ))}
+                <div className="min-w-0">
+                  <p
+                    className={`text-[15px] leading-snug font-medium transition-colors duration-300 ${
+                      empty ? 'text-steel-400' : item.passed ? 'text-steel-100' : 'text-[#f2c3bb]'
+                    }`}
+                  >
+                    {item.label}
+                  </p>
+                  {!empty ? (
+                    <p className="mt-1 text-[14px] leading-relaxed break-words text-steel-400">{item.hint}</p>
+                  ) : null}
+                </div>
+              </li>
+            )
+          })}
         </ul>
       </Card>
     </div>

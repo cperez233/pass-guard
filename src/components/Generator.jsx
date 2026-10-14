@@ -1,6 +1,9 @@
+/* editorial-ui · Cristian Pérez · cristianperez.me */
 import { ArrowRight, Asterisk, CaseLower, CaseUpper, EyeOff, Hash, Ruler, ShieldCheck, SlidersHorizontal } from 'lucide-react'
 import { AMBIGUOUS, LENGTH_MAX, LENGTH_MIN, poolSize } from '../lib/passwords.js'
+import { KeyBlade } from './KeyBlade.jsx'
 import { PasswordDisplay } from './PasswordDisplay.jsx'
+import { RollingNumber } from './RollingNumber.jsx'
 import { StrengthMeter } from './StrengthMeter.jsx'
 import { Card, SectionTitle, Toggle } from './ui.jsx'
 
@@ -13,38 +16,49 @@ const CHARSET_TOGGLES = [
 
 const CHARSET_KEYS = CHARSET_TOGGLES.map((toggle) => toggle.key)
 
+/** Posición del "16 recomendado" sobre la escala real del deslizador. */
+const RECOMMENDED_PERCENT = ((16 - LENGTH_MIN) / (LENGTH_MAX - LENGTH_MIN)) * 100
+
 export function Generator({ password, options, onOptionChange, onRegenerate, analysis, onAudit }) {
   const activeSets = CHARSET_KEYS.filter((key) => options[key])
   const isOnlyActive = (key) => activeSets.length === 1 && activeSets[0] === key
   const lengthPercent = ((options.length - LENGTH_MIN) / (LENGTH_MAX - LENGTH_MIN)) * 100
+  const pool = poolSize(options)
 
   return (
-    <div className="grid gap-4 lg:grid-cols-5">
-      <Card className="lg:col-span-3">
+    <div className="grid items-start gap-4 sm:gap-5 lg:grid-cols-5">
+      <Card raised className="enter lg:col-span-3" style={{ animationDelay: '120ms' }}>
         <SectionTitle
           icon={ShieldCheck}
           title="Contraseña generada"
           description="Aleatoriedad de crypto.getRandomValues (CSPRNG). Nada se envía a ningún servidor."
         />
 
+        <KeyBlade value={password} className="mb-5 pr-1" />
+
         <PasswordDisplay value={password} onRegenerate={onRegenerate} />
 
-        <div className="mt-5 rounded-xl border border-white/8 bg-white/2 p-4">
+        <div className="mt-6 border-t border-white/[0.06] pt-5">
           <StrengthMeter analysis={analysis} />
 
           <button
             type="button"
             onClick={onAudit}
             disabled={!password}
-            className="group mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-40"
+            className="group mt-4 -mb-2 inline-flex min-h-11 items-center gap-2 text-[15px] font-semibold text-brass-300 transition-colors disabled:opacity-40 [@media(hover:hover)]:hover:text-brass-200"
           >
-            Auditar esta contraseña en detalle
-            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+            <span className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-0.5 transition-[background-size] duration-300 ease-[var(--ease-out-soft)] group-hover:bg-[length:100%_1px] group-focus-visible:bg-[length:100%_1px]">
+              Auditar esta contraseña en detalle
+            </span>
+            <ArrowRight
+              className="size-4 shrink-0 transition-transform duration-300 ease-[var(--ease-out-soft)] group-hover:translate-x-1"
+              strokeWidth={2.5}
+            />
           </button>
         </div>
       </Card>
 
-      <Card className="lg:col-span-2">
+      <Card className="enter lg:col-span-2" style={{ animationDelay: '220ms' }}>
         <SectionTitle
           icon={SlidersHorizontal}
           title="Parámetros"
@@ -52,21 +66,27 @@ export function Generator({ password, options, onOptionChange, onRegenerate, ana
         />
 
         <div className="mb-6">
-          <div className="mb-3 flex items-center justify-between">
-            <label htmlFor="length" className="flex items-center gap-1.5 text-xs font-medium text-slate-300">
-              <Ruler className="size-3.5 text-slate-500" strokeWidth={2} />
+          <div className="mb-4 flex items-end justify-between">
+            <label htmlFor="length" className="flex items-center gap-2 text-[15px] font-medium text-steel-200">
+              <Ruler className="size-[18px] shrink-0 text-steel-500" strokeWidth={2} />
               Longitud
             </label>
-            <span className="rounded-md bg-cyan-500/10 px-2 py-0.5 font-mono text-xs font-semibold text-cyan-300 ring-1 ring-cyan-400/25">
-              {options.length}
+            <span className="font-wide text-[2rem] leading-none font-extrabold tracking-tight text-brass-300">
+              <RollingNumber value={options.length} />
             </span>
           </div>
 
-          <div className="relative flex h-5 items-center">
-            <div className="absolute inset-x-0 h-2 rounded-full bg-slate-800 ring-1 ring-inset ring-white/5" />
-            <div
-              className="absolute h-2 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 transition-[width] duration-150"
-              style={{ width: `${lengthPercent}%` }}
+          <div className="relative flex h-11 items-center">
+            <div className="absolute inset-x-0 h-2 overflow-hidden rounded-full bg-steel-950 ring-1 ring-inset ring-white/[0.06]">
+              <div
+                className="absolute inset-0 origin-left bg-gradient-to-r from-brass-500 to-brass-300"
+                style={{ transform: `scaleX(${lengthPercent / 100})` }}
+              />
+            </div>
+            <span
+              aria-hidden
+              className="absolute top-2.5 h-1.5 w-px bg-steel-400/60"
+              style={{ left: `${RECOMMENDED_PERCENT}%` }}
             />
             <input
               id="length"
@@ -75,33 +95,39 @@ export function Generator({ password, options, onOptionChange, onRegenerate, ana
               max={LENGTH_MAX}
               value={options.length}
               onChange={(event) => onOptionChange('length', Number(event.target.value))}
-              className="relative h-2 w-full cursor-pointer"
+              className="relative h-11 w-full cursor-pointer"
               aria-describedby="length-scale"
             />
           </div>
 
-          <div id="length-scale" className="mt-2 flex justify-between font-mono text-[10px] text-slate-600">
-            <span>{LENGTH_MIN}</span>
-            <span className="text-slate-500">16 recomendado</span>
-            <span>{LENGTH_MAX}</span>
+          <div id="length-scale" className="relative mt-0.5 h-4 font-mono text-[13px] text-steel-500">
+            <span className="absolute left-0">{LENGTH_MIN}</span>
+            <span
+              className="absolute -translate-x-[3px] whitespace-nowrap text-steel-400"
+              style={{ left: `${RECOMMENDED_PERCENT}%` }}
+            >
+              16 recomendado
+            </span>
+            <span className="absolute right-0">{LENGTH_MAX}</span>
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+        <div className="grid border-t border-white/[0.06] sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-1">
           {CHARSET_TOGGLES.map(({ key, label, hint, icon }) => (
-            <Toggle
-              key={key}
-              icon={icon}
-              label={label}
-              hint={hint}
-              checked={options[key]}
-              disabled={isOnlyActive(key)}
-              onChange={(value) => onOptionChange(key, value)}
-            />
+            <div key={key} className="border-b border-white/[0.06]">
+              <Toggle
+                icon={icon}
+                label={label}
+                hint={hint}
+                checked={options[key]}
+                disabled={isOnlyActive(key)}
+                onChange={(value) => onOptionChange(key, value)}
+              />
+            </div>
           ))}
         </div>
 
-        <div className="mt-2">
+        <div className="border-b border-white/[0.06]">
           <Toggle
             icon={EyeOff}
             label="Excluir caracteres ambiguos"
@@ -111,12 +137,12 @@ export function Generator({ password, options, onOptionChange, onRegenerate, ana
           />
         </div>
 
-        <p className="mt-4 font-mono text-[11px] leading-relaxed text-slate-500">
-          R = {poolSize(options)} caracteres · L = {options.length}
+        <p className="mt-5 rounded-xl bg-steel-950/70 px-4 py-3.5 font-mono text-[13px] leading-relaxed text-steel-400 ring-1 ring-inset ring-white/[0.05]">
+          R = {pool} caracteres · L = {options.length}
           <br />
-          E = {options.length} × log₂({poolSize(options)}) ={' '}
-          <span className="text-slate-300">
-            {(options.length * Math.log2(Math.max(poolSize(options), 2))).toFixed(1)} bits
+          E = {options.length} × log₂({pool}) ={' '}
+          <span className="font-semibold text-brass-300">
+            {(options.length * Math.log2(Math.max(pool, 2))).toFixed(1)} bits
           </span>
         </p>
       </Card>

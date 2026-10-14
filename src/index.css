@@ -1,53 +1,112 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+/* editorial-ui · Cristian Pérez · cristianperez.me
+ * Dirección: la cerradura de pines. Acero grafito, latón de llave, grabado en placa. */
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --font-display: 'Archivo', 'Geist', ui-sans-serif, system-ui, sans-serif;
 
-  --color-abyss-950: #05070d;
-  --color-abyss-900: #090d16;
-  --color-abyss-800: #0f172a;
-  --color-abyss-700: #16203a;
-  --color-abyss-600: #1e293b;
+  /* Acero: fondo, placas y tinta */
+  --color-steel-950: #0b0d0f;
+  --color-steel-900: #101316;
+  --color-steel-850: #14181b;
+  --color-steel-800: #191e22;
+  --color-steel-700: #232a2f;
+  --color-steel-600: #333c43;
+  --color-steel-500: #59646c;
+  --color-steel-400: #87929a;
+  --color-steel-300: #aeb7bd;
+  --color-steel-200: #ccd3d8;
+  --color-steel-100: #e4e7ea;
 
-  --animate-fade-up: fade-up 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-pop: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  --animate-aurora: aurora 14s ease-in-out infinite;
-}
+  /* Latón: el único acento */
+  --color-brass-200: #f1d8a2;
+  --color-brass-300: #e6c27a;
+  --color-brass-400: #d9a74a;
+  --color-brass-500: #b9862f;
+  --color-brass-700: #5a4220;
 
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  /* Niveles de robustez, apagados para convivir con el latón */
+  --color-weak: #e2604f;
+  --color-moderate: #e58b45;
+  --color-strong: #a3c47e;
+  --color-excellent: #79c3c6;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  --shadow-rest: 0 1px 0 0 rgb(255 255 255 / 0.035) inset, 0 10px 24px -18px rgb(0 0 0 / 0.7);
+  --shadow-raised: 0 1px 0 0 rgb(255 255 255 / 0.05) inset, 0 30px 60px -32px rgb(0 0 0 / 0.85),
+    0 12px 24px -16px rgb(0 0 0 / 0.6);
+  --shadow-float: 0 1px 0 0 rgb(255 255 255 / 0.06) inset, 0 18px 40px -14px rgb(0 0 0 / 0.75);
+
+  --animate-pop: pop 0.32s var(--ease-spring);
 }
 
 @keyframes pop {
-  0% { opacity: 0; transform: scale(0.85); }
-  60% { transform: scale(1.04); }
+  0% { opacity: 0; transform: scale(0.9); }
   100% { opacity: 1; transform: scale(1); }
 }
 
-@keyframes aurora {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.55; }
-  50% { transform: translate3d(4%, -6%, 0) scale(1.15); opacity: 0.8; }
+/* Entrada de cada letra del titular desde una ranura (como un pin que sube). */
+@keyframes rise {
+  from { transform: translateY(105%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Haz de la fresadora que recorre la hoja al tallar una llave nueva. */
+@keyframes cutter {
+  0% { transform: translateX(-10%); opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translateX(var(--cut-run, 600px)); opacity: 0; }
+}
+
+@keyframes sheen {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to { transform: translateX(260%) skewX(-18deg); }
 }
 
 @layer base {
   html {
     color-scheme: dark;
     scrollbar-gutter: stable;
+    overflow-x: clip;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
   }
 
   body {
-    @apply bg-abyss-900 font-sans text-slate-300 antialiased;
+    @apply bg-steel-900 font-sans text-steel-300 antialiased;
     margin: 0;
+    font-size: 16px;
+    line-height: 1.55;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+
+  button,
+  [role='switch'],
+  input {
+    touch-action: manipulation;
   }
 
   ::selection {
-    @apply bg-cyan-400/30 text-white;
+    background: rgb(217 167 74 / 0.35);
+    color: #fff;
   }
 
-  /* Slider nativo estilizado (Tailwind no cubre pseudo-elementos de range) */
+  :focus-visible {
+    outline: 2px solid var(--color-brass-400);
+    outline-offset: 3px;
+  }
+
+  /* Deslizador nativo: el pulgar es la cabeza de un pin de latón. */
   input[type='range'] {
     -webkit-appearance: none;
     appearance: none;
@@ -56,58 +115,147 @@
 
   input[type='range']::-webkit-slider-runnable-track {
     height: 0.5rem;
-    border-radius: 9999px;
     background: transparent;
   }
 
   input[type='range']::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    height: 1.25rem;
-    width: 1.25rem;
-    margin-top: -0.375rem;
+    height: 1.6rem;
+    width: 1.6rem;
+    margin-top: -0.55rem;
     border-radius: 9999px;
-    background: #f8fafc;
-    border: 3px solid #06b6d4;
-    box-shadow: 0 0 0 4px rgb(6 182 212 / 0.18), 0 2px 8px rgb(0 0 0 / 0.5);
+    background: radial-gradient(circle at 35% 30%, #f6e2b4, #d9a74a 55%, #9b6f24);
+    border: 0;
+    box-shadow: 0 0 0 5px rgb(16 19 22), 0 0 0 6px rgb(217 167 74 / 0.4), 0 6px 14px rgb(0 0 0 / 0.6);
     cursor: grab;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-
-  input[type='range']:hover::-webkit-slider-thumb {
-    transform: scale(1.12);
-    box-shadow: 0 0 0 7px rgb(6 182 212 / 0.22), 0 2px 10px rgb(0 0 0 / 0.55);
+    transition: transform 0.18s var(--ease-out-soft), box-shadow 0.18s ease;
   }
 
   input[type='range']:active::-webkit-slider-thumb {
     cursor: grabbing;
+    transform: scale(1.12);
   }
 
   input[type='range']::-moz-range-track {
     height: 0.5rem;
-    border-radius: 9999px;
     background: transparent;
   }
 
   input[type='range']::-moz-range-thumb {
-    height: 1.25rem;
-    width: 1.25rem;
+    height: 1.6rem;
+    width: 1.6rem;
     border-radius: 9999px;
-    background: #f8fafc;
-    border: 3px solid #06b6d4;
-    box-shadow: 0 0 0 4px rgb(6 182 212 / 0.18);
+    background: radial-gradient(circle at 35% 30%, #f6e2b4, #d9a74a 55%, #9b6f24);
+    border: 0;
+    box-shadow: 0 0 0 5px rgb(16 19 22), 0 0 0 6px rgb(217 167 74 / 0.4), 0 6px 14px rgb(0 0 0 / 0.6);
     cursor: grab;
   }
 
+  input[type='range']:focus-visible {
+    outline: none;
+  }
+
   input[type='range']:focus-visible::-webkit-slider-thumb {
-    box-shadow: 0 0 0 7px rgb(6 182 212 / 0.35);
+    box-shadow: 0 0 0 5px rgb(16 19 22), 0 0 0 8px var(--color-brass-400);
+  }
+
+  input[type='range']:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 5px rgb(16 19 22), 0 0 0 8px var(--color-brass-400);
   }
 }
 
-@utility glass {
-  background: linear-gradient(160deg, rgb(30 41 59 / 0.55) 0%, rgb(15 23 42 / 0.75) 100%);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  border: 1px solid rgb(148 163 184 / 0.12);
-  box-shadow: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 24px 60px -30px rgb(0 0 0 / 0.9);
+@media (hover: hover) and (pointer: fine) {
+  input[type='range']:hover::-webkit-slider-thumb {
+    transform: scale(1.08);
+  }
+}
+
+/* Placa de acero mecanizado: tono, hairline superior y una sombra de la escala. */
+@utility plate {
+  background: linear-gradient(180deg, var(--color-steel-800) 0%, var(--color-steel-850) 100%);
+  border: 1px solid rgb(255 255 255 / 0.06);
+  box-shadow: var(--shadow-rest);
+}
+
+@utility plate-raised {
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgb(217 167 74 / 0.06), transparent 55%),
+    linear-gradient(180deg, #1c2226 0%, var(--color-steel-850) 100%);
+  border: 1px solid rgb(255 255 255 / 0.07);
+  box-shadow: var(--shadow-raised);
+}
+
+@utility font-wide {
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-variation-settings: 'wdth' 125;
+}
+
+@utility font-semiwide {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+  font-variation-settings: 'wdth' 112;
+}
+
+/* Grano casi invisible sobre la base: el acero no es un plano digital. */
+@utility grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.letter-slot {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.06em;
+  margin-bottom: -0.06em;
+}
+
+.letter-slot > span {
+  display: inline-block;
+  animation: rise 0.9s var(--ease-out-soft) both;
+}
+
+.enter {
+  animation: fade-up 0.8s var(--ease-out-soft) both;
+}
+
+.cutter-beam {
+  animation: cutter 0.75s var(--ease-out-soft) both;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sheen-host:hover .sheen {
+    animation: sheen 0.9s var(--ease-out-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .cutter-beam,
+  .sheen {
+    display: none;
+  }
+}
+
+/* Tambores: el glifo de relleno vive en ::after, fuera del texto seleccionable. */
+.tumbling {
+  position: relative;
+  color: transparent !important;
+}
+
+.tumbling::after {
+  content: attr(data-glyph);
+  position: absolute;
+  inset: 0;
+  text-align: center;
+  font-weight: 400;
+  color: rgb(230 194 122 / 0.7);
+  pointer-events: none;
 }
