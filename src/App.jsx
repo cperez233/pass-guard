@@ -1,16 +1,18 @@
 /* editorial-ui · Cristian Pérez · cristianperez.me */
 import { KeyRound, ScanSearch, Terminal } from 'lucide-react'
-import { AnimatePresence, MotionConfig, motion, useInView } from 'motion/react'
+import { AnimatePresence, MotionConfig, motion, useAnimationControls, useInView } from 'motion/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Analyzer } from './components/Analyzer.jsx'
 import { Generator } from './components/Generator.jsx'
 import { LockFace } from './components/LockFace.jsx'
+import { LangContext } from './hooks/useLang.js'
 import { analyzePassword } from './lib/analysis.js'
+import { LANGS, detectLang, messagesFor, saveLang } from './lib/i18n.js'
 import { DEFAULT_OPTIONS, generatePassword } from './lib/passwords.js'
 
 const TABS = [
-  { id: 'generator', label: 'Generador', icon: KeyRound },
-  { id: 'analyzer', label: 'Auditor', icon: ScanSearch },
+  { id: 'generator', icon: KeyRound },
+  { id: 'analyzer', icon: ScanSearch },
 ]
 
 const ease = [0.22, 1, 0.36, 1]
@@ -34,6 +36,9 @@ export default function App() {
   const [password, setPassword] = useState(() => generatePassword(DEFAULT_OPTIONS))
   const [candidate, setCandidate] = useState('')
   const [scrolled, setScrolled] = useState(false)
+  const [lang, setLang] = useState(detectLang)
+  const t = messagesFor(lang)
+  const panelFade = useAnimationControls()
   const groundRef = useRef(null)
   const groundInView = useInView(groundRef, { once: true, margin: '0px 0px -10% 0px' })
 
@@ -43,6 +48,23 @@ export default function App() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // Idioma: <html lang>, título y descripción siguen a la elección.
+  useEffect(() => {
+    document.documentElement.lang = lang
+    document.title = t.meta.title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', t.meta.description)
+  }, [lang, t])
+
+  const changeLang = useCallback(
+    (next) => {
+      if (next === lang) return
+      setLang(next)
+      saveLang(next)
+      panelFade.start({ opacity: [0.25, 1], transition: { duration: 0.45, ease } })
+    },
+    [lang, panelFade],
+  )
 
   const regenerate = useCallback(
     (nextOptions = options) => setPassword(generatePassword(nextOptions)),
@@ -59,8 +81,8 @@ export default function App() {
     [options],
   )
 
-  const generatedAnalysis = useMemo(() => analyzePassword(password), [password])
-  const candidateAnalysis = useMemo(() => analyzePassword(candidate), [candidate])
+  const generatedAnalysis = useMemo(() => analyzePassword(password, lang), [password, lang])
+  const candidateAnalysis = useMemo(() => analyzePassword(candidate, lang), [candidate, lang])
 
   const changeTab = useCallback((next) => {
     setTab(next)
@@ -80,19 +102,25 @@ export default function App() {
   const direction = tab === 'analyzer' ? 1 : -1
 
   return (
+    <LangContext.Provider value={lang}>
     <MotionConfig reducedMotion="user">
       <div className="relative min-h-svh">
         <Backdrop />
 
         <div className="relative mx-auto flex min-h-svh w-full max-w-6xl flex-col px-4 pt-8 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6 sm:pt-14 lg:px-8">
           <header className="relative mb-8 sm:mb-12">
-            <p
-              className="enter flex items-center gap-2.5 text-[15px] font-medium text-steel-400"
-              style={{ animationDelay: '40ms' }}
-            >
-              <KeyMark className="h-4 w-8 shrink-0" />
-              Generador y auditor de contraseñas · 100 % local
-            </p>
+            <div className="flex items-start justify-between gap-4">
+              <p
+                className="enter flex items-center gap-2.5 pt-2 text-[15px] font-medium text-steel-400"
+                style={{ animationDelay: '40ms' }}
+              >
+                <KeyMark className="h-4 w-8 shrink-0" />
+                <span key={lang} className="lang-swap">
+                  {t.eyebrow}
+                </span>
+              </p>
+              <LangSwitch lang={lang} onChange={changeLang} label={t.langLabel} />
+            </div>
 
             <h1
               aria-label={TITLE}
@@ -115,21 +143,25 @@ export default function App() {
                 className="enter max-w-2xl md:max-w-[calc(100%-12rem)] lg:max-w-2xl text-[17px] leading-relaxed text-steel-300 sm:text-lg"
                 style={{ animationDelay: '420ms' }}
               >
-                Genera claves con el CSPRNG del navegador y mide su resistencia real con entropía de
-                Shannon, escenarios de crackeo y detección de patrones. Ninguna contraseña abandona esta
-                pestaña.
+                <span key={lang} className="lang-swap">
+                  {t.lede}
+                </span>
               </p>
               <div
                 className="enter absolute right-0 -bottom-14 hidden w-40 md:block lg:-bottom-28 lg:w-52"
                 style={{ animationDelay: '600ms' }}
               >
-                <LockFace analysis={tab === 'generator' ? generatedAnalysis : candidateAnalysis} />
+                <LockFace
+                  interactive
+                  label={t.lockLabel}
+                  analysis={tab === 'generator' ? generatedAnalysis : candidateAnalysis}
+                />
               </div>
             </div>
           </header>
 
           <nav
-            aria-label="Secciones"
+            aria-label={t.nav}
             className={`enter sticky top-[max(0.75rem,env(safe-area-inset-top))] z-30 mb-5 flex w-full max-w-sm self-start rounded-2xl p-1.5 transition-[box-shadow,background-color] duration-300 sm:mb-6 ${
               scrolled
                 ? 'bg-steel-800/[0.98] shadow-[var(--shadow-float)] ring-1 ring-white/10'
@@ -137,7 +169,7 @@ export default function App() {
             }`}
             style={{ animationDelay: '520ms' }}
           >
-            {TABS.map(({ id, label, icon: Icon }) => {
+            {TABS.map(({ id, icon: Icon }) => {
               const active = tab === id
               return (
                 <motion.button
@@ -158,13 +190,13 @@ export default function App() {
                     />
                   ) : null}
                   <Icon className="relative size-[18px] shrink-0" strokeWidth={2.2} />
-                  <span className="relative">{label}</span>
+                  <span className="relative">{t.tabs[id]}</span>
                 </motion.button>
               )
             })}
           </nav>
 
-          <main id="panel" className="relative flex-1">
+          <motion.main id="panel" className="relative flex-1" animate={panelFade}>
             <AnimatePresence mode="wait" initial={false} custom={direction}>
               <motion.div
                 key={tab}
@@ -193,7 +225,7 @@ export default function App() {
                 )}
               </motion.div>
             </AnimatePresence>
-          </main>
+          </motion.main>
 
           <footer className="mt-16 sm:mt-24">
             {/* Línea de suelo: la llave descansa sobre ella. */}
@@ -218,17 +250,16 @@ export default function App() {
               <p className="flex shrink-0 items-center gap-2 text-steel-400">
                 <Terminal className="size-4 shrink-0 text-brass-400" strokeWidth={2} />
                 <span className="font-mono">
-                  E = L · log₂(R) · caso medio 2<sup>E</sup>/2
+                  {t.footer.formula} 2<sup>E</sup>/2
                 </span>
               </p>
               <p className="max-w-xl sm:text-right">
-                Las estimaciones asumen fuerza bruta sobre un hash rápido. Un KDF lento (bcrypt, scrypt,
-                Argon2) multiplica el coste varios órdenes de magnitud.
+                {t.footer.note}
               </p>
             </div>
 
             <p className="mt-6 text-[13px] text-steel-500 sm:mt-8">
-              Tallado con cuidado por{' '}
+              {t.footer.credit}{' '}
               <a
                 href="https://cristianperez.me"
                 target="_blank"
@@ -243,6 +274,47 @@ export default function App() {
         </div>
       </div>
     </MotionConfig>
+    </LangContext.Provider>
+  )
+}
+
+/** Selector de idioma: el pin de latón se desliza a la opción activa. */
+function LangSwitch({ lang, onChange, label }) {
+  const names = { es: 'Español', en: 'English' }
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className="enter relative flex shrink-0 rounded-full bg-steel-850 p-1 ring-1 ring-white/[0.07]"
+      style={{ animationDelay: '80ms' }}
+    >
+      {LANGS.map((code) => {
+        const active = code === lang
+        return (
+          <button
+            key={code}
+            type="button"
+            lang={code}
+            title={names[code]}
+            aria-label={names[code]}
+            aria-pressed={active}
+            onClick={() => onChange(code)}
+            className={`relative h-8 min-w-11 rounded-full px-3 font-mono text-[13px] font-semibold uppercase tracking-wider transition-colors duration-200 after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-[''] active:scale-95 ${
+              active ? 'text-steel-950' : 'text-steel-400 [@media(hover:hover)]:hover:text-steel-100'
+            }`}
+          >
+            {active ? (
+              <motion.span
+                layoutId="lang-pill"
+                transition={{ type: 'spring', stiffness: 460, damping: 34 }}
+                className="absolute inset-0 rounded-full bg-brass-400 shadow-[inset_0_1px_0_rgb(255_255_255/0.35)]"
+              />
+            ) : null}
+            <span className="relative">{code}</span>
+          </button>
+        )
+      })}
+    </div>
   )
 }
 

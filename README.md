@@ -19,16 +19,18 @@ src/
 ├── lib/
 │   ├── passwords.js   CSPRNG generation (crypto.getRandomValues), charsets, shuffle
 │   ├── analysis.js    Entropy, classification, brute-force cost, weak patterns
-│   └── levelStyles.js Colour of each strength level
+│   ├── levelStyles.js Colour of each strength level
+│   └── i18n.js        Spanish and English copy, language detection
 ├── hooks/
 │   ├── useCopyToClipboard.js
+│   ├── useLang.js                      Active language and its copy
 │   ├── useReducedMotion.js             Reduced-motion preference
 │   └── useTumblers.js                  Tumbler effect when the password changes (visual only)
 ├── components/
 │   ├── Generator.jsx / Analyzer.jsx    One view per tab
 │   ├── PasswordDisplay.jsx             Monospaced output + copy (tap or hold)
 │   ├── KeyBlade.jsx                    Key whose bitting is cut from the password
-│   ├── LockFace.jsx                    Lock cylinder that turns with the strength level
+│   ├── LockFace.jsx                    Lock cylinder: opening turn, ring that gauges entropy
 │   ├── RollingNumber.jsx               Figures that roll in the direction of change
 │   ├── StrengthMeter.jsx               Entropy bar with thresholds
 │   └── ui.jsx                          Card, SectionTitle, Toggle, Stat
@@ -37,6 +39,9 @@ src/
 
 Design: graphite steel with a brass accent (Archivo, Geist and Geist Mono). Animations use
 `motion` and respect `prefers-reduced-motion`.
+
+Language: Spanish or English based on the browser (`es-*` → Spanish, anything else → English),
+with an ES/EN switch; the choice is saved in `localStorage`.
 
 ## Cryptography and metrics
 

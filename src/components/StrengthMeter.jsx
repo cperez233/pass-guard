@@ -1,5 +1,6 @@
 /* editorial-ui · Cristian Pérez · cristianperez.me */
 import { STRENGTH_LEVELS } from '../lib/analysis.js'
+import { useLang } from '../hooks/useLang.js'
 import { levelColor } from '../lib/levelStyles.js'
 import { LockFace } from './LockFace.jsx'
 import { RollingNumber } from './RollingNumber.jsx'
@@ -12,6 +13,7 @@ const THRESHOLDS = STRENGTH_LEVELS.filter((level) => Number.isFinite(level.max))
 export function StrengthMeter({ analysis, compact = false }) {
   const { entropy, level, percent, length } = analysis
   const empty = length === 0
+  const { t } = useLang()
   const color = levelColor(analysis)
   const fill = empty ? 0 : Math.max(percent, 3) / 100
 
@@ -28,7 +30,7 @@ export function StrengthMeter({ analysis, compact = false }) {
               className="size-2 shrink-0 rotate-45 transition-colors duration-500"
               style={{ background: color }}
             />
-            {empty ? 'Sin evaluar' : level.label}
+            {empty ? t.meter.empty : level.label}
           </span>
         </div>
 

@@ -30,7 +30,7 @@ export function SectionTitle({ icon: Icon, title, description, action }) {
 }
 
 /** Interruptor accesible: un <button> con role de switch, no un checkbox oculto. */
-export function Toggle({ icon: Icon, label, hint, checked, onChange, disabled = false }) {
+export function Toggle({ icon: Icon, label, hint, checked, onChange, disabled = false, disabledHint }) {
   return (
     <button
       type="button"
@@ -39,7 +39,7 @@ export function Toggle({ icon: Icon, label, hint, checked, onChange, disabled = 
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      title={disabled ? 'Debe quedar al menos un conjunto activo' : undefined}
+      title={disabled ? disabledHint : undefined}
       className="group flex min-h-14 w-full items-center gap-3.5 px-1 py-3 text-left transition-colors duration-200 active:bg-white/[0.025] disabled:cursor-not-allowed [@media(hover:hover)]:hover:bg-white/[0.02]"
     >
       {Icon ? (

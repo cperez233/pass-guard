@@ -259,3 +259,14 @@
   color: rgb(230 194 122 / 0.7);
   pointer-events: none;
 }
+
+/* Cambio de idioma: el texto nuevo aparece con un fundido corto. */
+@keyframes lang-swap {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.lang-swap {
+  display: inline-block;
+  animation: lang-swap 0.4s var(--ease-out-soft) both;
+}

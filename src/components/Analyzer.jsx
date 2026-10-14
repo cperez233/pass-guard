@@ -17,6 +17,7 @@ import {
 import { AnimatePresence, motion } from 'motion/react'
 import { useId, useState } from 'react'
 import { formatCount } from '../lib/analysis.js'
+import { useLang } from '../hooks/useLang.js'
 import { levelColor } from '../lib/levelStyles.js'
 import { KeyBlade } from './KeyBlade.jsx'
 import { RollingNumber } from './RollingNumber.jsx'
@@ -32,6 +33,7 @@ const SCENARIO_ICONS = {
 }
 
 function PatternChips({ patterns }) {
+  const { t } = useLang()
   return (
     <AnimatePresence initial={false}>
       {patterns.all.length > 0 ? (
@@ -46,7 +48,7 @@ function PatternChips({ patterns }) {
           <div className="mt-5 border-l-2 border-[color:var(--color-weak)] bg-[color:var(--color-weak)]/[0.07] py-4 pr-4 pl-4">
             <p className="flex items-center gap-2 text-[15px] font-semibold text-[color:var(--color-weak)]">
               <ShieldAlert className="size-[18px] shrink-0" strokeWidth={2.2} />
-              Fragmentos predecibles detectados
+              {t.analyzer.patternsTitle}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <AnimatePresence initial={false} mode="popLayout">
@@ -66,8 +68,7 @@ function PatternChips({ patterns }) {
               </AnimatePresence>
             </div>
             <p className="mt-3 text-[14px] leading-relaxed text-steel-400">
-              Un ataque con reglas de diccionario prueba estas variantes antes que la fuerza bruta, así
-              que la entropía efectiva mostrada ya está penalizada.
+              {t.analyzer.patternsNote}
             </p>
           </div>
         </motion.div>
@@ -81,6 +82,8 @@ export function Analyzer({ value, onChange, analysis }) {
   const inputId = useId()
   const empty = analysis.length === 0
   const color = levelColor(analysis)
+  const { lang, t } = useLang()
+  const a = t.analyzer
 
   return (
     <div className="grid items-start gap-4 sm:gap-5 lg:grid-cols-5">
@@ -88,8 +91,8 @@ export function Analyzer({ value, onChange, analysis }) {
         <Card raised className="enter" style={{ animationDelay: '60ms' }}>
           <SectionTitle
             icon={ScanSearch}
-            title="Auditar una contraseña"
-            description="Escribe o pega una clave. Todo el cálculo ocurre en tu navegador: no hay peticiones de red."
+            title={a.title}
+            description={a.description}
           />
 
           <KeyBlade value={value} className="mb-5 pr-1" />
@@ -100,14 +103,14 @@ export function Analyzer({ value, onChange, analysis }) {
               strokeWidth={2}
             />
             <label htmlFor={inputId} className="sr-only">
-              Contraseña a evaluar
+              {a.inputLabel}
             </label>
             <input
               id={inputId}
               type={revealed ? 'text' : 'password'}
               value={value}
               onChange={(event) => onChange(event.target.value)}
-              placeholder="Introduce la contraseña a evaluar…"
+              placeholder={a.placeholder}
               autoComplete="off"
               autoCapitalize="off"
               autoCorrect="off"
@@ -117,7 +120,7 @@ export function Analyzer({ value, onChange, analysis }) {
             <button
               type="button"
               onClick={() => setRevealed((current) => !current)}
-              aria-label={revealed ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              aria-label={revealed ? a.hide : a.show}
               className="absolute top-1/2 right-2 grid size-11 -translate-y-1/2 place-items-center rounded-xl text-steel-400 transition-[background-color,color,transform] active:scale-95 [@media(hover:hover)]:hover:bg-white/5 [@media(hover:hover)]:hover:text-steel-100"
             >
               {revealed ? (
@@ -133,31 +136,29 @@ export function Analyzer({ value, onChange, analysis }) {
           </div>
 
           <div className="mt-5 grid grid-cols-2 gap-x-5 gap-y-5 border-t border-white/[0.06] pt-5 sm:grid-cols-[1fr_1fr_1fr_1.45fr]">
-            <Stat icon={Type} label="Longitud" value={<RollingNumber value={analysis.length} />} unit="car." />
+            <Stat icon={Type} label={a.stats.length} value={<RollingNumber value={analysis.length} />} unit={a.stats.lengthUnit} />
             <Stat
               icon={Fingerprint}
-              label="Alfabeto R"
+              label={a.stats.pool}
               value={<RollingNumber value={analysis.pool || 0} />}
-              unit="símb."
+              unit={a.stats.poolUnit}
             />
             <Stat
               icon={Binary}
-              label="Entropía"
+              label={a.stats.entropy}
               value={<RollingNumber value={analysis.entropy.toFixed(1)} />}
               unit="bits"
               accent={empty ? 'var(--color-steel-500)' : color}
             />
             <Stat
               icon={Cpu}
-              label="Combinaciones"
-              value={empty ? '0' : formatCount(analysis.combinations)}
+              label={a.stats.combinations}
+              value={empty ? '0' : formatCount(analysis.combinations, lang)}
             />
           </div>
 
           <p className="mt-5 text-[14px] leading-relaxed text-steel-500">
-            R se estima desde la composición observada, asumiendo el alfabeto ASCII completo de cada
-            tipo presente (26 + 26 + 10 + 33): es la hipótesis que haría un atacante que conoce el
-            formato de la clave.
+            {a.poolNote}
           </p>
 
           <PatternChips patterns={analysis.patterns} />
@@ -166,8 +167,8 @@ export function Analyzer({ value, onChange, analysis }) {
         <Card className="enter" style={{ animationDelay: '160ms' }}>
           <SectionTitle
             icon={Cpu}
-            title="Coste estimado de un ataque de fuerza bruta"
-            description="Caso medio (2^E / 2 intentos). Sin salt fuerte ni KDF lento: el hash marca el ritmo."
+            title={a.costTitle}
+            description={a.costDescription}
           />
 
           <ul className="border-t border-white/[0.06]">
@@ -210,8 +211,8 @@ export function Analyzer({ value, onChange, analysis }) {
       <Card className="enter lg:sticky lg:top-24 lg:col-span-2" style={{ animationDelay: '240ms' }}>
         <SectionTitle
           icon={CircleCheck}
-          title="Checklist de validación"
-          description="Comprobaciones en vivo sobre composición y patrones conocidos."
+          title={a.checklistTitle}
+          description={a.checklistDescription}
         />
 
         <ul className="border-t border-white/[0.06]">

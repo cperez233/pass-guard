@@ -1,6 +1,7 @@
 /* editorial-ui · Cristian Pérez · cristianperez.me */
 import { Check, Copy, RefreshCw } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useLang } from '../hooks/useLang.js'
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard.js'
 import { useTumblers } from '../hooks/useTumblers.js'
 
@@ -19,6 +20,8 @@ export function PasswordDisplay({ value, onRegenerate, busy = false }) {
   const { copied, error, copy } = useCopyToClipboard()
   const [turns, setTurns] = useState(0)
   const tumblers = useTumblers(value)
+  const { t } = useLang()
+  const d = t.display
   const [holding, setHolding] = useState(false)
   const holdTimer = useRef(0)
   const copiedByHold = useRef(false)
@@ -67,7 +70,7 @@ export function PasswordDisplay({ value, onRegenerate, busy = false }) {
       >
         <output
           aria-live="polite"
-          aria-label="Contraseña generada"
+          aria-label={d.output}
           className="relative block min-h-[1.45em] font-mono text-[1.45rem] leading-[1.45] tracking-[0.02em] break-all select-all sm:text-[1.9rem] lg:text-[2.15rem]"
         >
           {value ? (
@@ -85,7 +88,7 @@ export function PasswordDisplay({ value, onRegenerate, busy = false }) {
               )
             })
           ) : (
-            <span className="font-sans text-lg text-steel-500">Activa al menos un conjunto de caracteres…</span>
+            <span className="font-sans text-lg text-steel-500">{d.empty}</span>
           )}
         </output>
 
@@ -99,7 +102,7 @@ export function PasswordDisplay({ value, onRegenerate, busy = false }) {
             onPointerCancel={endHold}
             onContextMenu={(event) => event.preventDefault()}
             disabled={!value}
-            title="Pulsa o mantén para copiar"
+            title={d.holdHint}
             className={`sheen-host relative select-none [-webkit-touch-callout:none] inline-flex min-h-12 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl px-4 text-[15px] font-semibold transition-[background-color,color,transform,box-shadow] duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 ${
               copied
                 ? 'bg-[color:var(--color-strong)]/15 text-[color:var(--color-strong)] ring-1 ring-[color:var(--color-strong)]/50'
@@ -127,12 +130,12 @@ export function PasswordDisplay({ value, onRegenerate, busy = false }) {
             {copied ? (
               <>
                 <Check className="relative size-[18px] shrink-0 animate-pop" strokeWidth={2.6} />
-                <span className="relative">Copiado al portapapeles</span>
+                <span className="relative">{d.copied}</span>
               </>
             ) : (
               <>
                 <Copy className="relative size-[18px] shrink-0" strokeWidth={2.2} />
-                <span className="relative">Copiar contraseña</span>
+                <span className="relative">{d.copy}</span>
               </>
             )}
           </button>
@@ -141,7 +144,7 @@ export function PasswordDisplay({ value, onRegenerate, busy = false }) {
             type="button"
             onClick={handleRegenerate}
             disabled={busy}
-            aria-label="Regenerar contraseña"
+            aria-label={d.regenerateLabel}
             className="group inline-flex min-h-12 min-w-12 items-center justify-center gap-2 rounded-xl bg-steel-800 px-4 text-[15px] font-semibold text-steel-100 ring-1 ring-white/10 transition-[background-color,transform] duration-200 active:scale-[0.96] [@media(hover:hover)]:hover:bg-steel-700"
           >
             <RefreshCw
@@ -149,13 +152,13 @@ export function PasswordDisplay({ value, onRegenerate, busy = false }) {
               style={{ transform: `rotate(${turns * 360}deg)` }}
               strokeWidth={2.2}
             />
-            <span className="hidden sm:inline">Regenerar</span>
+            <span className="hidden sm:inline">{d.regenerate}</span>
           </button>
         </div>
 
         {error ? (
           <p className="relative mt-3 text-[14px] text-[color:var(--color-weak)]">
-            El navegador bloqueó el portapapeles. Selecciona el texto y copia manualmente.
+            {d.clipboardError}
           </p>
         ) : null}
       </div>

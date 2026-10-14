@@ -5,6 +5,7 @@
  * El análisis es puramente local — la contraseña nunca sale del navegador.
  */
 
+import { messagesFor } from './i18n.js'
 import { AMBIGUOUS } from './passwords.js'
 
 /* ------------------------------------------------------------------ *
@@ -150,20 +151,20 @@ export function crackSeconds(entropy, guessesPerSecond) {
 
 const SUPERSCRIPT = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' }
 
-const toScientific = (value) => {
+const toScientific = (value, yearsWord) => {
   const exponent = Math.floor(Math.log10(value))
   const mantissa = (value / Math.pow(10, exponent)).toFixed(1)
   const superscript = String(exponent)
     .split('')
     .map((d) => SUPERSCRIPT[d] ?? d)
     .join('')
-  return `${mantissa} × 10${superscript} años`
+  return `${mantissa} × 10${superscript} ${yearsWord}`
 }
 
 /** Notación compacta para recuentos enormes (2^E combinaciones). */
-export function formatCount(value) {
+export function formatCount(value, lang = 'es') {
   if (!Number.isFinite(value)) return '∞'
-  if (value < 1e6) return Math.round(value).toLocaleString('es-ES')
+  if (value < 1e6) return Math.round(value).toLocaleString(messagesFor(lang).locale)
 
   const exponent = Math.floor(Math.log10(value))
   const mantissa = (value / Math.pow(10, exponent)).toFixed(2)
@@ -174,31 +175,34 @@ export function formatCount(value) {
   return `${mantissa} × 10${superscript}`
 }
 
+/** Límites de cada unidad; los nombres salen de `i18n.js` en el mismo orden. */
 const TIME_UNITS = [
-  { limit: 60, divisor: 1, singular: 'segundo', plural: 'segundos' },
-  { limit: 3600, divisor: 60, singular: 'minuto', plural: 'minutos' },
-  { limit: 86400, divisor: 3600, singular: 'hora', plural: 'horas' },
-  { limit: 2629800, divisor: 86400, singular: 'día', plural: 'días' },
-  { limit: 31557600, divisor: 2629800, singular: 'mes', plural: 'meses' },
+  { limit: 60, divisor: 1 },
+  { limit: 3600, divisor: 60 },
+  { limit: 86400, divisor: 3600 },
+  { limit: 2629800, divisor: 86400 },
+  { limit: 31557600, divisor: 2629800 },
 ]
 
 const YEAR = 31557600
 
 /** Convierte segundos en una etiqueta legible ("3 días", "1,2 × 10¹⁸ años"). */
-export function formatDuration(seconds) {
-  if (!Number.isFinite(seconds)) return 'Prácticamente eterno'
-  if (seconds < 1) return 'Instantáneo'
+export function formatDuration(seconds, lang = 'es') {
+  const { time, locale } = messagesFor(lang)
+  if (!Number.isFinite(seconds)) return time.forever
+  if (seconds < 1) return time.instant
 
-  for (const unit of TIME_UNITS) {
+  for (const [index, unit] of TIME_UNITS.entries()) {
     if (seconds < unit.limit) {
       const value = Math.round(seconds / unit.divisor)
-      return `${value} ${value === 1 ? unit.singular : unit.plural}`
+      const [singular, plural] = time.units[index]
+      return `${value} ${value === 1 ? singular : plural}`
     }
   }
 
   const years = seconds / YEAR
-  if (years >= 1e6) return toScientific(years)
-  return `${Math.round(years).toLocaleString('es-ES')} ${Math.round(years) === 1 ? 'año' : 'años'}`
+  if (years >= 1e6) return toScientific(years, time.year[1])
+  return `${Math.round(years).toLocaleString(locale)} ${Math.round(years) === 1 ? time.year[0] : time.year[1]}`
 }
 
 /* ------------------------------------------------------------------ *
@@ -336,61 +340,60 @@ export function detectPatterns(password) {
  * Checklist en vivo
  * ------------------------------------------------------------------ */
 
-export function buildChecklist(password, { composition, patterns, length }) {
+export function buildChecklist(password, { composition, patterns, length }, lang = 'es') {
+  const text = messagesFor(lang).checklist
   const activeSets = ['lowercase', 'uppercase', 'numbers', 'symbols'].filter(
     (key) => composition[key],
   ).length
+  const sequenceHits = [...patterns.sequential, ...patterns.keyboard]
 
   return [
     {
       id: 'length',
-      label: 'Longitud mínima de 12 caracteres',
-      hint: length >= 16 ? 'Excelente: 16+ caracteres.' : 'La longitud es el factor que más entropía aporta.',
+      label: text.length.label,
+      hint: length >= 16 ? text.length.long : text.length.short,
       passed: length >= 12,
     },
     {
       id: 'mix',
-      label: 'Mezcla de al menos 3 tipos de caracteres',
-      hint: `Detectados ${activeSets} de 4 conjuntos (aA1$).`,
+      label: text.mix.label,
+      hint: text.mix.hint(activeSets),
       passed: activeSets >= 3,
     },
     {
       id: 'symbols',
-      label: 'Incluye símbolos',
-      hint: 'Amplía el alfabeto en 33 caracteres adicionales.',
+      label: text.symbols.label,
+      hint: text.symbols.hint,
       passed: composition.symbols,
     },
     {
       id: 'sequential',
-      label: 'Sin secuencias ni patrones de teclado',
-      hint:
-        patterns.sequential.length || patterns.keyboard.length
-          ? `Patrón detectado: ${[...patterns.sequential, ...patterns.keyboard].slice(0, 3).join(', ')}`
-          : 'No se hallaron secuencias tipo 1234 / qwerty / abcd.',
-      passed: patterns.sequential.length === 0 && patterns.keyboard.length === 0,
+      label: text.sequential.label,
+      hint: sequenceHits.length
+        ? text.sequential.found(sequenceHits.slice(0, 3).join(', '))
+        : text.sequential.clean,
+      passed: sequenceHits.length === 0,
     },
     {
       id: 'repeats',
-      label: 'Sin caracteres o bloques repetidos',
+      label: text.repeats.label,
       hint: patterns.repeats.length
-        ? `Repetición detectada: ${patterns.repeats.slice(0, 3).join(', ')}`
-        : 'No hay repeticiones significativas.',
+        ? text.repeats.found(patterns.repeats.slice(0, 3).join(', '))
+        : text.repeats.clean,
       passed: patterns.repeats.length === 0,
     },
     {
       id: 'dictionary',
-      label: 'Sin palabras de diccionario comunes',
+      label: text.dictionary.label,
       hint: patterns.words.length
-        ? `Término común: ${patterns.words.slice(0, 3).join(', ')}`
-        : 'No coincide con términos frecuentes en wordlists.',
+        ? text.dictionary.found(patterns.words.slice(0, 3).join(', '))
+        : text.dictionary.clean,
       passed: patterns.words.length === 0,
     },
     {
       id: 'dates',
-      label: 'Sin años ni fechas reconocibles',
-      hint: patterns.dates.length
-        ? `Año detectado: ${patterns.dates.join(', ')}`
-        : 'Sin sufijos tipo 2024 que las reglas de hashcat prueban primero.',
+      label: text.dates.label,
+      hint: patterns.dates.length ? text.dates.found(patterns.dates.join(', ')) : text.dates.clean,
       passed: patterns.dates.length === 0,
     },
   ]
@@ -412,7 +415,8 @@ function patternPenalty(patterns, length) {
   return ratio * 0.55 // hasta un 55 % de la entropía teórica
 }
 
-export function analyzePassword(password) {
+export function analyzePassword(password, lang = 'es') {
+  const text = messagesFor(lang)
   const length = [...password].length
   const composition = analyzeComposition(password)
   const pool = estimatePoolSize(password)
@@ -420,7 +424,8 @@ export function analyzePassword(password) {
   const patterns = detectPatterns(password)
   const penalty = patternPenalty(patterns, length)
   const entropy = rawEntropy * (1 - penalty)
-  const level = classifyEntropy(entropy)
+  const baseLevel = classifyEntropy(entropy)
+  const level = { ...baseLevel, ...text.levels[baseLevel.id] }
 
   return {
     password,
@@ -434,11 +439,12 @@ export function analyzePassword(password) {
     level,
     percent: entropyToPercent(entropy),
     combinations: Math.pow(2, entropy),
-    checklist: buildChecklist(password, { composition, patterns, length }),
+    checklist: buildChecklist(password, { composition, patterns, length }, lang),
     scenarios: ATTACK_SCENARIOS.map((scenario) => ({
       ...scenario,
+      ...text.scenarios[scenario.id],
       seconds: crackSeconds(entropy, scenario.rate),
-      human: formatDuration(crackSeconds(entropy, scenario.rate)),
+      human: formatDuration(crackSeconds(entropy, scenario.rate), lang),
     })),
   }
 }
