@@ -1,6 +1,6 @@
 /* editorial-ui · Cristian Pérez · cristianperez.me */
 import { Check, Copy, RefreshCw } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard.js'
 import { useTumblers } from '../hooks/useTumblers.js'
 
@@ -12,10 +12,45 @@ function charClass(char) {
   return 'text-brass-400'
 }
 
+/** Mantener pulsado el botón de copiar rellena el latón y copia al completarse. */
+const HOLD_MS = 650
+
 export function PasswordDisplay({ value, onRegenerate, busy = false }) {
   const { copied, error, copy } = useCopyToClipboard()
   const [turns, setTurns] = useState(0)
   const tumblers = useTumblers(value)
+  const [holding, setHolding] = useState(false)
+  const holdTimer = useRef(0)
+  const copiedByHold = useRef(false)
+
+  useEffect(() => () => clearTimeout(holdTimer.current), [])
+
+  const startHold = (event) => {
+    if (!value || event.button > 0) return
+    copiedByHold.current = false
+    setHolding(true)
+    clearTimeout(holdTimer.current)
+    holdTimer.current = setTimeout(() => {
+      // La pulsación larga copia sola; el click que llega al soltar se ignora.
+      copiedByHold.current = true
+      setHolding(false)
+      navigator.vibrate?.(12)
+      copy(value)
+    }, HOLD_MS)
+  }
+
+  const endHold = () => {
+    clearTimeout(holdTimer.current)
+    setHolding(false)
+  }
+
+  const handleCopyClick = () => {
+    if (copiedByHold.current) {
+      copiedByHold.current = false
+      return
+    }
+    copy(value)
+  }
 
   const handleRegenerate = () => {
     // Cada pulsación suma una vuelta completa: el icono gira siempre hacia delante.
@@ -57,9 +92,15 @@ export function PasswordDisplay({ value, onRegenerate, busy = false }) {
         <div className="relative mt-5 flex items-stretch gap-2.5">
           <button
             type="button"
-            onClick={() => copy(value)}
+            onClick={handleCopyClick}
+            onPointerDown={startHold}
+            onPointerUp={endHold}
+            onPointerLeave={endHold}
+            onPointerCancel={endHold}
+            onContextMenu={(event) => event.preventDefault()}
             disabled={!value}
-            className={`sheen-host relative inline-flex min-h-12 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl px-4 text-[15px] font-semibold transition-[background-color,color,transform,box-shadow] duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 ${
+            title="Pulsa o mantén para copiar"
+            className={`sheen-host relative select-none [-webkit-touch-callout:none] inline-flex min-h-12 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl px-4 text-[15px] font-semibold transition-[background-color,color,transform,box-shadow] duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 ${
               copied
                 ? 'bg-[color:var(--color-strong)]/15 text-[color:var(--color-strong)] ring-1 ring-[color:var(--color-strong)]/50'
                 : 'bg-brass-400 text-steel-950 shadow-[0_10px_24px_-12px_rgb(217_167_74/0.7),inset_0_1px_0_rgb(255_255_255/0.35)] [@media(hover:hover)]:hover:bg-brass-300'
@@ -68,18 +109,30 @@ export function PasswordDisplay({ value, onRegenerate, busy = false }) {
             {!copied ? (
               <span
                 aria-hidden
+                className="pointer-events-none absolute inset-0 origin-left bg-brass-200/70"
+                style={{
+                  transform: `scaleX(${holding ? 1 : 0})`,
+                  transition: holding
+                    ? `transform ${HOLD_MS}ms linear`
+                    : 'transform 220ms var(--ease-out-soft)',
+                }}
+              />
+            ) : null}
+            {!copied ? (
+              <span
+                aria-hidden
                 className="sheen pointer-events-none absolute inset-y-0 left-0 w-1/3 -translate-x-[120%] bg-gradient-to-r from-transparent via-white/45 to-transparent"
               />
             ) : null}
             {copied ? (
               <>
-                <Check className="size-[18px] shrink-0 animate-pop" strokeWidth={2.6} />
-                Copiado al portapapeles
+                <Check className="relative size-[18px] shrink-0 animate-pop" strokeWidth={2.6} />
+                <span className="relative">Copiado al portapapeles</span>
               </>
             ) : (
               <>
-                <Copy className="size-[18px] shrink-0" strokeWidth={2.2} />
-                Copiar contraseña
+                <Copy className="relative size-[18px] shrink-0" strokeWidth={2.2} />
+                <span className="relative">Copiar contraseña</span>
               </>
             )}
           </button>

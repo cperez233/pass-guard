@@ -1,5 +1,5 @@
 /* editorial-ui · Cristian Pérez · cristianperez.me */
-import { useMemo } from 'react'
+import { useId, useMemo } from 'react'
 
 /** Profundidad de corte 0-4 por carácter: determinista, la misma clave da la misma llave. */
 function cutDepth(char) {
@@ -17,6 +17,7 @@ const BLANK_PINS = 16
 export function KeyBlade({ value, className = '' }) {
   const chars = useMemo(() => [...value], [value])
   const empty = chars.length === 0
+  const gradientId = `bow-brass-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const depths = empty ? Array(BLANK_PINS).fill(0) : chars.map(cutDepth)
 
   return (
@@ -24,7 +25,7 @@ export function KeyBlade({ value, className = '' }) {
       {/* Cabeza (bow) */}
       <svg viewBox="0 0 64 64" className={`size-14 shrink-0 sm:size-16 ${empty ? 'opacity-40' : ''}`}>
         <defs>
-          <linearGradient id="bow-brass" x1="0" y1="0" x2="1" y2="1">
+          <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stopColor="#f3dca6" />
             <stop offset="0.45" stopColor="#d9a74a" />
             <stop offset="1" stopColor="#8a6122" />
@@ -32,7 +33,7 @@ export function KeyBlade({ value, className = '' }) {
         </defs>
         <path
           d="M14 6h28a16 16 0 0 1 16 16v20a16 16 0 0 1-16 16H14A10 10 0 0 1 4 48V16A10 10 0 0 1 14 6Z"
-          fill="url(#bow-brass)"
+          fill={`url(#${gradientId})`}
         />
         <circle cx="22" cy="32" r="7.5" fill="#101316" />
         <path d="M40 18v28" stroke="#7a561d" strokeWidth="2" strokeLinecap="round" opacity=".55" />

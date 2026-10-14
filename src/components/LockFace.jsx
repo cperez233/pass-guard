@@ -1,5 +1,6 @@
 /* editorial-ui · Cristian Pérez · cristianperez.me */
 import { motion } from 'motion/react'
+import { useId } from 'react'
 
 /** Giro del rotor según el nivel: con una clave excelente la cerradura abre (90°). */
 const TURN = { weak: 0, moderate: 22, strong: 48, excellent: 90 }
@@ -10,23 +11,25 @@ const TURN = { weak: 0, moderate: 22, strong: 48, excellent: 90 }
  */
 export function LockFace({ analysis, className = '' }) {
   const empty = analysis.length === 0
+  // Ids únicos: puede haber dos cilindros en la página y uno oculto con display:none.
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
   const angle = empty ? 0 : (TURN[analysis.level.id] ?? 0)
 
   return (
     <div aria-hidden className={`relative aspect-square ${className}`}>
       <svg viewBox="0 0 200 200" className="absolute inset-0 size-full">
         <defs>
-          <radialGradient id="lock-steel" cx="40%" cy="35%" r="75%">
+          <radialGradient id={`lock-steel-${uid}`} cx="40%" cy="35%" r="75%">
             <stop offset="0" stopColor="#2c353b" />
             <stop offset="1" stopColor="#13171a" />
           </radialGradient>
-          <linearGradient id="lock-brass" x1="0" y1="0" x2="1" y2="1">
+          <linearGradient id={`lock-brass-${uid}`} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stopColor="#f0d59b" />
             <stop offset=".5" stopColor="#d9a74a" />
             <stop offset="1" stopColor="#7d5820" />
           </linearGradient>
         </defs>
-        <circle cx="100" cy="100" r="98" fill="url(#lock-steel)" stroke="rgb(255 255 255 / .07)" />
+        <circle cx="100" cy="100" r="98" fill={`url(#lock-steel-${uid})`} stroke="rgb(255 255 255 / .07)" />
         {/* Graduación grabada */}
         {Array.from({ length: 36 }, (_, index) => (
           <line
@@ -40,7 +43,7 @@ export function LockFace({ analysis, className = '' }) {
             transform={`rotate(${index * 10} 100 100)`}
           />
         ))}
-        <circle cx="100" cy="100" r="70" fill="url(#lock-brass)" />
+        <circle cx="100" cy="100" r="70" fill={`url(#lock-brass-${uid})`} />
         <circle cx="100" cy="100" r="70" fill="none" stroke="#5a4220" strokeWidth="2" opacity=".6" />
         <circle cx="100" cy="100" r="60" fill="none" stroke="#f6e2b4" strokeWidth="1" opacity=".35" />
       </svg>

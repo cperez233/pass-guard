@@ -2,7 +2,7 @@
 
 **English** · [Español](README.es.md)
 
-Password generation and auditing SPA. React 19 + Vite + Tailwind CSS v4 + lucide-react.
+Password generation and auditing SPA. React 19 + Vite + Tailwind CSS v4 + lucide-react + motion.
 Everything runs in the browser: no password is ever sent to a server.
 
 ## Getting started
@@ -18,16 +18,25 @@ npm run dev
 src/
 ├── lib/
 │   ├── passwords.js   CSPRNG generation (crypto.getRandomValues), charsets, shuffle
-│   └── analysis.js    Entropy, classification, brute-force cost, weak patterns
+│   ├── analysis.js    Entropy, classification, brute-force cost, weak patterns
+│   └── levelStyles.js Colour of each strength level
 ├── hooks/
-│   └── useCopyToClipboard.js
+│   ├── useCopyToClipboard.js
+│   ├── useReducedMotion.js             Reduced-motion preference
+│   └── useTumblers.js                  Tumbler effect when the password changes (visual only)
 ├── components/
 │   ├── Generator.jsx / Analyzer.jsx    One view per tab
-│   ├── PasswordDisplay.jsx             Monospaced output + copy with feedback
+│   ├── PasswordDisplay.jsx             Monospaced output + copy (tap or hold)
+│   ├── KeyBlade.jsx                    Key whose bitting is cut from the password
+│   ├── LockFace.jsx                    Lock cylinder that turns with the strength level
+│   ├── RollingNumber.jsx               Figures that roll in the direction of change
 │   ├── StrengthMeter.jsx               Entropy bar with thresholds
 │   └── ui.jsx                          Card, SectionTitle, Toggle, Stat
 └── App.jsx            Shared state and tab navigation
 ```
+
+Design: graphite steel with a brass accent (Archivo, Geist and Geist Mono). Animations use
+`motion` and respect `prefers-reduced-motion`.
 
 ## Cryptography and metrics
 

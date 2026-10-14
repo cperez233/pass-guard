@@ -1,7 +1,7 @@
 /* editorial-ui · Cristian Pérez · cristianperez.me */
 import { KeyRound, ScanSearch, Terminal } from 'lucide-react'
-import { AnimatePresence, MotionConfig, motion } from 'motion/react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { AnimatePresence, MotionConfig, motion, useInView } from 'motion/react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Analyzer } from './components/Analyzer.jsx'
 import { Generator } from './components/Generator.jsx'
 import { LockFace } from './components/LockFace.jsx'
@@ -34,6 +34,8 @@ export default function App() {
   const [password, setPassword] = useState(() => generatePassword(DEFAULT_OPTIONS))
   const [candidate, setCandidate] = useState('')
   const [scrolled, setScrolled] = useState(false)
+  const groundRef = useRef(null)
+  const groundInView = useInView(groundRef, { once: true, margin: '0px 0px -10% 0px' })
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -195,8 +197,20 @@ export default function App() {
 
           <footer className="mt-16 sm:mt-24">
             {/* Línea de suelo: la llave descansa sobre ella. */}
-            <div aria-hidden className="relative h-6">
-              <KeyMark className="absolute bottom-0 left-0 h-5 w-10 text-brass-400 sm:left-auto sm:right-0" />
+            <div ref={groundRef} aria-hidden className="relative h-6">
+              {/* La llave cae, gira y se asienta sobre la línea una vez, al entrar en vista. */}
+              <motion.div
+                className="absolute bottom-0 left-1 h-5 w-10 origin-[85%_80%] sm:right-1 sm:left-auto"
+                initial={{ y: -34, rotate: -38, opacity: 0 }}
+                animate={groundInView ? { y: 4, rotate: 0, opacity: 1 } : undefined}
+                transition={{
+                  y: { type: 'spring', stiffness: 260, damping: 13 },
+                  rotate: { type: 'spring', stiffness: 160, damping: 11, delay: 0.05 },
+                  opacity: { duration: 0.2 },
+                }}
+              >
+                <KeyMark className="size-full text-brass-400" />
+              </motion.div>
               <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-white/15 via-white/10 to-transparent sm:from-transparent sm:via-white/10 sm:to-white/15" />
             </div>
 

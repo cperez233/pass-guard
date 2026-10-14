@@ -2,7 +2,7 @@
 
 [English](README.md) · **Español**
 
-SPA de generación y auditoría de contraseñas. React 19 + Vite + Tailwind CSS v4 + lucide-react.
+SPA de generación y auditoría de contraseñas. React 19 + Vite + Tailwind CSS v4 + lucide-react + motion.
 Todo el procesamiento ocurre en el navegador: ninguna contraseña se envía a un servidor.
 
 ## Arranque
@@ -18,16 +18,25 @@ npm run dev
 src/
 ├── lib/
 │   ├── passwords.js   Generación CSPRNG (crypto.getRandomValues), charsets, shuffle
-│   └── analysis.js    Entropía, clasificación, coste de fuerza bruta, patrones débiles
+│   ├── analysis.js    Entropía, clasificación, coste de fuerza bruta, patrones débiles
+│   └── levelStyles.js Color de cada nivel de robustez
 ├── hooks/
-│   └── useCopyToClipboard.js
+│   ├── useCopyToClipboard.js
+│   ├── useReducedMotion.js             Preferencia de movimiento reducido
+│   └── useTumblers.js                  Efecto de tambores al cambiar la clave (solo visual)
 ├── components/
 │   ├── Generator.jsx / Analyzer.jsx    Vistas de cada pestaña
-│   ├── PasswordDisplay.jsx             Salida monoespaciada + copiado con feedback
+│   ├── PasswordDisplay.jsx             Salida monoespaciada + copiado (pulsar o mantener)
+│   ├── KeyBlade.jsx                    Llave cuyo dentado se talla con la contraseña
+│   ├── LockFace.jsx                    Cilindro que gira según el nivel de robustez
+│   ├── RollingNumber.jsx               Cifras que ruedan en la dirección del cambio
 │   ├── StrengthMeter.jsx               Barra de entropía con umbrales
 │   └── ui.jsx                          Card, SectionTitle, Toggle, Stat
 └── App.jsx            Estado compartido y navegación por pestañas
 ```
+
+Diseño: acero grafito con acento latón (Archivo, Geist y Geist Mono). Las animaciones usan
+`motion` y respetan `prefers-reduced-motion`.
 
 ## Criptografía y métricas
 

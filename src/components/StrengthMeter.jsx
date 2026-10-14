@@ -1,6 +1,7 @@
 /* editorial-ui · Cristian Pérez · cristianperez.me */
 import { STRENGTH_LEVELS } from '../lib/analysis.js'
 import { levelColor } from '../lib/levelStyles.js'
+import { LockFace } from './LockFace.jsx'
 import { RollingNumber } from './RollingNumber.jsx'
 
 /** Marcas visuales en los umbrales de clasificación (la barra llega a 128 bits). */
@@ -16,7 +17,7 @@ export function StrengthMeter({ analysis, compact = false }) {
 
   return (
     <div>
-      <div className="flex items-end justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <span
             className="font-semiwide inline-flex items-center gap-2 text-[15px] font-bold tracking-tight transition-colors duration-500"
@@ -29,12 +30,12 @@ export function StrengthMeter({ analysis, compact = false }) {
             />
             {empty ? 'Sin evaluar' : level.label}
           </span>
-          {!compact && !empty ? (
-            <p className="mt-1 text-[14px] leading-snug text-steel-400">{level.summary}</p>
-          ) : null}
         </div>
 
-        <div className="shrink-0 text-right leading-none">
+        <div className="flex shrink-0 items-center gap-3 text-right leading-none">
+          {/* En móvil el cilindro del hero no se ve: aquí acompaña a la cifra. */}
+          {!compact ? <LockFace analysis={analysis} className="w-11 md:hidden" /> : null}
+          <div>
           <span
             className="font-mono text-[1.9rem] font-semibold tracking-tight transition-colors duration-500 sm:text-4xl"
             style={{ color: empty ? 'var(--color-steel-500)' : color }}
@@ -42,8 +43,13 @@ export function StrengthMeter({ analysis, compact = false }) {
             <RollingNumber value={entropy.toFixed(1)} />
           </span>
           <span className="ml-1.5 font-mono text-[13px] text-steel-500">bits</span>
+          </div>
         </div>
       </div>
+
+      {!compact && !empty ? (
+        <p className="mt-1.5 text-[14px] leading-snug text-steel-400">{level.summary}</p>
+      ) : null}
 
       {/* Escala: la barra se llena con scaleX (sin animar el ancho). */}
       <div className="relative mt-4 h-2.5 overflow-hidden rounded-full bg-steel-950 ring-1 ring-inset ring-white/[0.06]">
