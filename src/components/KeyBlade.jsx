@@ -1,5 +1,6 @@
 /* editorial-ui · Cristian Pérez · cristianperez.me */
 import { useId, useMemo } from 'react'
+import { useLang } from '../hooks/useLang.js'
 
 /** Profundidad de corte 0-4 por carácter: determinista, la misma clave da la misma llave. */
 function cutDepth(char) {
@@ -17,6 +18,7 @@ const BLANK_PINS = 16
 export function KeyBlade({ value, className = '' }) {
   const chars = useMemo(() => [...value], [value])
   const empty = chars.length === 0
+  const { lang } = useLang()
   const gradientId = `bow-brass-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const depths = empty ? Array(BLANK_PINS).fill(0) : chars.map(cutDepth)
 
@@ -72,7 +74,7 @@ export function KeyBlade({ value, className = '' }) {
         {/* Haz de la fresadora: se vuelve a montar con cada clave nueva. */}
         {!empty ? (
           <span
-            key={value}
+            key={`${value}-${lang}`}
             className="cutter-beam pointer-events-none absolute -top-2 -bottom-1 left-0 w-[3px] rounded-full bg-white"
             style={{
               '--cut-run': 'calc(100cqw)',

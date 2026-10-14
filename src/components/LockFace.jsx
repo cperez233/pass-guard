@@ -1,6 +1,7 @@
 /* editorial-ui · Cristian Pérez · cristianperez.me */
 import { motion, useAnimationControls, useInView, useMotionValue, useSpring } from 'motion/react'
 import { useEffect, useId, useRef } from 'react'
+import { useLang } from '../hooks/useLang.js'
 import { levelColor } from '../lib/levelStyles.js'
 
 const TICKS = 36
@@ -48,6 +49,15 @@ export function LockFace({ analysis, className = '', interactive = false, label 
       transition: { duration: 0.8, delay: delay + 1.7 * 0.36, ease },
     })
   }, [seen, interactive, rotor, pulse])
+
+  // Cambio de idioma: la cerradura da una vuelta completa, como al abrir.
+  const { lang } = useLang()
+  const lastLang = useRef(lang)
+  useEffect(() => {
+    if (lastLang.current === lang) return
+    lastLang.current = lang
+    rotor.start(OPEN_TURN)
+  }, [lang, rotor])
 
   useEffect(() => {
     if (!mounted.current) {

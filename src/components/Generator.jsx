@@ -5,6 +5,7 @@ import { AMBIGUOUS, LENGTH_MAX, LENGTH_MIN, poolSize } from '../lib/passwords.js
 import { KeyBlade } from './KeyBlade.jsx'
 import { PasswordDisplay } from './PasswordDisplay.jsx'
 import { RollingNumber } from './RollingNumber.jsx'
+import { ScrambleText } from './ScrambleText.jsx'
 import { StrengthMeter } from './StrengthMeter.jsx'
 import { Card, SectionTitle, Toggle } from './ui.jsx'
 
@@ -51,7 +52,7 @@ export function Generator({ password, options, onOptionChange, onRegenerate, ana
             className="group mt-4 -mb-2 inline-flex min-h-11 items-center gap-2 text-[15px] font-semibold text-brass-300 transition-colors disabled:opacity-40 [@media(hover:hover)]:hover:text-brass-200"
           >
             <span className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-0.5 transition-[background-size] duration-300 ease-[var(--ease-out-soft)] group-hover:bg-[length:100%_1px] group-focus-visible:bg-[length:100%_1px]">
-              {g.audit}
+              <ScrambleText text={g.audit} />
             </span>
             <ArrowRight
               className="size-4 shrink-0 transition-transform duration-300 ease-[var(--ease-out-soft)] group-hover:translate-x-1"
@@ -72,7 +73,7 @@ export function Generator({ password, options, onOptionChange, onRegenerate, ana
           <div className="mb-4 flex items-end justify-between">
             <label htmlFor="length" className="flex items-center gap-2 text-[15px] font-medium text-steel-200">
               <Ruler className="size-[18px] shrink-0 text-steel-500" strokeWidth={2} />
-              {g.length}
+              <ScrambleText text={g.length} />
             </label>
             <span className="font-wide text-[2rem] leading-none font-extrabold tracking-tight text-brass-300">
               <RollingNumber value={options.length} />
@@ -80,7 +81,7 @@ export function Generator({ password, options, onOptionChange, onRegenerate, ana
           </div>
 
           <div className="relative flex h-11 items-center">
-            <div className="absolute inset-x-0 h-2 overflow-hidden rounded-full bg-steel-950 ring-1 ring-inset ring-white/[0.06]">
+            <div className="absolute inset-x-0 isolate h-2 transform-gpu overflow-hidden rounded-full bg-steel-950 ring-1 ring-inset ring-white/[0.06]">
               <div
                 className="absolute inset-0 origin-left bg-gradient-to-r from-brass-500 to-brass-300"
                 style={{ transform: `scaleX(${lengthPercent / 100})` }}
@@ -109,7 +110,7 @@ export function Generator({ password, options, onOptionChange, onRegenerate, ana
               className="absolute -translate-x-[3px] whitespace-nowrap text-steel-400"
               style={{ left: `${RECOMMENDED_PERCENT}%` }}
             >
-              {g.recommended}
+              <ScrambleText text={g.recommended} />
             </span>
             <span className="absolute right-0">{LENGTH_MAX}</span>
           </div>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLang } from '../hooks/useLang.js'
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard.js'
 import { useTumblers } from '../hooks/useTumblers.js'
+import { ScrambleText } from './ScrambleText.jsx'
 
 /** Colorea cada carácter por tipo: leer una clave a simple vista es más fácil así. */
 function charClass(char) {
@@ -103,7 +104,7 @@ export function PasswordDisplay({ value, onRegenerate, busy = false }) {
             onContextMenu={(event) => event.preventDefault()}
             disabled={!value}
             title={d.holdHint}
-            className={`sheen-host relative select-none [-webkit-touch-callout:none] inline-flex min-h-12 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl px-4 text-[15px] font-semibold transition-[background-color,color,transform,box-shadow] duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 ${
+            className={`sheen-host relative isolate transform-gpu select-none [-webkit-touch-callout:none] inline-flex min-h-12 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl px-4 text-[15px] font-semibold transition-[background-color,color,transform,box-shadow] duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 ${
               copied
                 ? 'bg-[color:var(--color-strong)]/15 text-[color:var(--color-strong)] ring-1 ring-[color:var(--color-strong)]/50'
                 : 'bg-brass-400 text-steel-950 shadow-[0_10px_24px_-12px_rgb(217_167_74/0.7),inset_0_1px_0_rgb(255_255_255/0.35)] [@media(hover:hover)]:hover:bg-brass-300'
@@ -135,7 +136,9 @@ export function PasswordDisplay({ value, onRegenerate, busy = false }) {
             ) : (
               <>
                 <Copy className="relative size-[18px] shrink-0" strokeWidth={2.2} />
-                <span className="relative">{d.copy}</span>
+                <span className="relative">
+                  <ScrambleText text={d.copy} />
+                </span>
               </>
             )}
           </button>
@@ -152,7 +155,9 @@ export function PasswordDisplay({ value, onRegenerate, busy = false }) {
               style={{ transform: `rotate(${turns * 360}deg)` }}
               strokeWidth={2.2}
             />
-            <span className="hidden sm:inline">{d.regenerate}</span>
+            <span className="hidden sm:inline">
+              <ScrambleText text={d.regenerate} />
+            </span>
           </button>
         </div>
 

@@ -21,6 +21,8 @@ import { useLang } from '../hooks/useLang.js'
 import { levelColor } from '../lib/levelStyles.js'
 import { KeyBlade } from './KeyBlade.jsx'
 import { RollingNumber } from './RollingNumber.jsx'
+import { LangSwap } from './LangSwap.jsx'
+import { ScrambleText } from './ScrambleText.jsx'
 import { StrengthMeter } from './StrengthMeter.jsx'
 import { Card, SectionTitle, Stat } from './ui.jsx'
 
@@ -48,7 +50,7 @@ function PatternChips({ patterns }) {
           <div className="mt-5 border-l-2 border-[color:var(--color-weak)] bg-[color:var(--color-weak)]/[0.07] py-4 pr-4 pl-4">
             <p className="flex items-center gap-2 text-[15px] font-semibold text-[color:var(--color-weak)]">
               <ShieldAlert className="size-[18px] shrink-0" strokeWidth={2.2} />
-              {t.analyzer.patternsTitle}
+              <ScrambleText text={t.analyzer.patternsTitle} />
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <AnimatePresence initial={false} mode="popLayout">
@@ -68,7 +70,7 @@ function PatternChips({ patterns }) {
               </AnimatePresence>
             </div>
             <p className="mt-3 text-[14px] leading-relaxed text-steel-400">
-              {t.analyzer.patternsNote}
+              <LangSwap>{t.analyzer.patternsNote}</LangSwap>
             </p>
           </div>
         </motion.div>
@@ -158,7 +160,7 @@ export function Analyzer({ value, onChange, analysis }) {
           </div>
 
           <p className="mt-5 text-[14px] leading-relaxed text-steel-500">
-            {a.poolNote}
+            <LangSwap>{a.poolNote}</LangSwap>
           </p>
 
           <PatternChips patterns={analysis.patterns} />
@@ -190,8 +192,12 @@ export function Analyzer({ value, onChange, analysis }) {
                   />
 
                   <div className="min-w-0 flex-1">
-                    <p className="text-[15px] leading-snug font-medium text-steel-100">{scenario.label}</p>
-                    <p className="mt-0.5 font-mono text-[12.5px] leading-snug text-steel-500">{scenario.detail}</p>
+                    <p className="text-[15px] leading-snug font-medium text-steel-100">
+                      <ScrambleText text={scenario.label} />
+                    </p>
+                    <p className="mt-0.5 font-mono text-[12.5px] leading-snug text-steel-500">
+                      <LangSwap>{scenario.detail}</LangSwap>
+                    </p>
                   </div>
 
                   <span
@@ -253,10 +259,12 @@ export function Analyzer({ value, onChange, analysis }) {
                       empty ? 'text-steel-400' : item.passed ? 'text-steel-100' : 'text-[#f2c3bb]'
                     }`}
                   >
-                    {item.label}
+                    <ScrambleText text={item.label} />
                   </p>
                   {!empty ? (
-                    <p className="mt-1 text-[14px] leading-relaxed break-words text-steel-400">{item.hint}</p>
+                    <p className="mt-1 text-[14px] leading-relaxed break-words text-steel-400">
+                      <LangSwap>{item.hint}</LangSwap>
+                    </p>
                   ) : null}
                 </div>
               </li>

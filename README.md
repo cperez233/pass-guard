@@ -40,8 +40,10 @@ src/
 Design: graphite steel with a brass accent (Archivo, Geist and Geist Mono). Animations use
 `motion` and respect `prefers-reduced-motion`.
 
-Language: Spanish or English based on the browser (`es-*` → Spanish, anything else → English),
-with an ES/EN switch; the choice is saved in `localStorage`.
+Language: Spanish at `/` and English at `/en/`, each with its own title and share preview. At the
+root the browser language is detected (`es-*` → Spanish, anything else → English); the ES/EN switch
+updates the URL and saves the choice in `localStorage`. On a switch, headings spin like tumblers
+and paragraphs are revealed with a sweep.
 
 ## Cryptography and metrics
 

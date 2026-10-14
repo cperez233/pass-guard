@@ -1,5 +1,7 @@
 /** Primitivas de interfaz compartidas por el generador y el auditor. */
 /* editorial-ui · Cristian Pérez · cristianperez.me */
+import { LangSwap } from './LangSwap.jsx'
+import { ScrambleText } from './ScrambleText.jsx'
 
 export function Card({ className = '', raised = false, children, ...props }) {
   return (
@@ -18,10 +20,14 @@ export function SectionTitle({ icon: Icon, title, description, action }) {
       <div className="min-w-0">
         <h2 className="font-semiwide flex items-center gap-2.5 text-[1.05rem] leading-tight font-bold tracking-[-0.01em] text-steel-100 sm:text-lg">
           {Icon ? <Icon className="size-[18px] shrink-0 text-brass-400" strokeWidth={2} /> : null}
-          {title}
+          <span>
+            <ScrambleText text={title} />
+          </span>
         </h2>
         {description ? (
-          <p className="mt-2 max-w-prose text-[15px] leading-relaxed text-steel-400">{description}</p>
+          <p className="mt-2 max-w-prose text-[15px] leading-relaxed text-steel-400">
+            <LangSwap>{description}</LangSwap>
+          </p>
         ) : null}
       </div>
       {action}
@@ -40,7 +46,7 @@ export function Toggle({ icon: Icon, label, hint, checked, onChange, disabled = 
       disabled={disabled}
       onClick={() => onChange(!checked)}
       title={disabled ? disabledHint : undefined}
-      className="group flex min-h-14 w-full items-center gap-3.5 px-1 py-3 text-left transition-colors duration-200 active:bg-white/[0.025] disabled:cursor-not-allowed [@media(hover:hover)]:hover:bg-white/[0.02]"
+      className="group flex min-h-14 w-full items-center gap-3.5 px-1 py-3 text-left select-none transition-colors duration-200 active:bg-white/[0.025] disabled:cursor-not-allowed [@media(hover:hover)]:hover:bg-white/[0.02]"
     >
       {Icon ? (
         <Icon
@@ -55,7 +61,7 @@ export function Toggle({ icon: Icon, label, hint, checked, onChange, disabled = 
             checked ? 'text-steel-100' : 'text-steel-400'
           }`}
         >
-          {label}
+          <ScrambleText text={label} />
         </span>
         {hint ? (
           <span className="mt-0.5 block truncate font-mono text-[13px] text-steel-500">{hint}</span>
@@ -85,7 +91,7 @@ export function Stat({ icon: Icon, label, value, unit, accent }) {
     <div className="min-w-0 py-1">
       <div className="flex items-center gap-1.5 text-[13px] font-medium text-steel-400">
         {Icon ? <Icon className="size-3.5 shrink-0" strokeWidth={2.2} /> : null}
-        {label}
+        <ScrambleText text={label} />
       </div>
       <div
         className="mt-1.5 font-mono text-[1.35rem] leading-none whitespace-nowrap font-semibold tracking-tight text-steel-100 xl:text-[1.5rem]"

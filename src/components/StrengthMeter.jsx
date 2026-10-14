@@ -4,6 +4,8 @@ import { useLang } from '../hooks/useLang.js'
 import { levelColor } from '../lib/levelStyles.js'
 import { LockFace } from './LockFace.jsx'
 import { RollingNumber } from './RollingNumber.jsx'
+import { LangSwap } from './LangSwap.jsx'
+import { ScrambleText } from './ScrambleText.jsx'
 
 /** Marcas visuales en los umbrales de clasificación (la barra llega a 128 bits). */
 const THRESHOLDS = STRENGTH_LEVELS.filter((level) => Number.isFinite(level.max)).map(
@@ -30,7 +32,7 @@ export function StrengthMeter({ analysis, compact = false }) {
               className="size-2 shrink-0 rotate-45 transition-colors duration-500"
               style={{ background: color }}
             />
-            {empty ? t.meter.empty : level.label}
+            <ScrambleText text={empty ? t.meter.empty : level.label} />
           </span>
         </div>
 
@@ -50,11 +52,13 @@ export function StrengthMeter({ analysis, compact = false }) {
       </div>
 
       {!compact && !empty ? (
-        <p className="mt-1.5 text-[14px] leading-snug text-steel-400">{level.summary}</p>
+        <p className="mt-1.5 text-[14px] leading-snug text-steel-400">
+          <LangSwap>{level.summary}</LangSwap>
+        </p>
       ) : null}
 
       {/* Escala: la barra se llena con scaleX (sin animar el ancho). */}
-      <div className="relative mt-4 h-2.5 overflow-hidden rounded-full bg-steel-950 ring-1 ring-inset ring-white/[0.06]">
+      <div className="relative isolate mt-4 h-2.5 transform-gpu overflow-hidden rounded-full bg-steel-950 ring-1 ring-inset ring-white/[0.06]">
         <div
           className="absolute inset-0 origin-left rounded-full transition-[transform,background-color] duration-700 ease-[var(--ease-out-soft)]"
           style={{ transform: `scaleX(${fill})`, background: color }}

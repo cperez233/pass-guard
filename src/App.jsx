@@ -4,10 +4,12 @@ import { AnimatePresence, MotionConfig, motion, useAnimationControls, useInView 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Analyzer } from './components/Analyzer.jsx'
 import { Generator } from './components/Generator.jsx'
+import { LangSwap } from './components/LangSwap.jsx'
 import { LockFace } from './components/LockFace.jsx'
+import { ScrambleText } from './components/ScrambleText.jsx'
 import { LangContext } from './hooks/useLang.js'
 import { analyzePassword } from './lib/analysis.js'
-import { LANGS, detectLang, messagesFor, saveLang } from './lib/i18n.js'
+import { LANGS, detectLang, messagesFor, pathForLang, saveLang } from './lib/i18n.js'
 import { DEFAULT_OPTIONS, generatePassword } from './lib/passwords.js'
 
 const TABS = [
@@ -37,6 +39,8 @@ export default function App() {
   const [candidate, setCandidate] = useState('')
   const [scrolled, setScrolled] = useState(false)
   const [lang, setLang] = useState(detectLang)
+  const [swapping, setSwapping] = useState(false)
+  const swapTimer = useRef(0)
   const t = messagesFor(lang)
   const panelFade = useAnimationControls()
   const groundRef = useRef(null)
@@ -49,18 +53,28 @@ export default function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Idioma: <html lang>, título y descripción siguen a la elección.
+  // Idioma: <html lang>, título, descripción y URL (/ o /en/) siguen a la elección,
+  // así un enlace compartido abre y se previsualiza en el idioma que se veía.
   useEffect(() => {
     document.documentElement.lang = lang
     document.title = t.meta.title
     document.querySelector('meta[name="description"]')?.setAttribute('content', t.meta.description)
+    const path = pathForLang(lang, window.location.pathname)
+    if (path !== window.location.pathname) {
+      window.history.replaceState(null, '', path + window.location.search + window.location.hash)
+    }
   }, [lang, t])
+
+  useEffect(() => () => clearTimeout(swapTimer.current), [])
 
   const changeLang = useCallback(
     (next) => {
       if (next === lang) return
       setLang(next)
       saveLang(next)
+      setSwapping(true)
+      clearTimeout(swapTimer.current)
+      swapTimer.current = setTimeout(() => setSwapping(false), 900)
       panelFade.start({ opacity: [0.25, 1], transition: { duration: 0.45, ease } })
     },
     [lang, panelFade],
@@ -100,9 +114,10 @@ export default function App() {
   }, [password, changeTab])
 
   const direction = tab === 'analyzer' ? 1 : -1
+  const langValue = useMemo(() => ({ lang, swapping }), [lang, swapping])
 
   return (
-    <LangContext.Provider value={lang}>
+    <LangContext.Provider value={langValue}>
     <MotionConfig reducedMotion="user">
       <div className="relative min-h-svh">
         <Backdrop />
@@ -115,8 +130,8 @@ export default function App() {
                 style={{ animationDelay: '40ms' }}
               >
                 <KeyMark className="h-4 w-8 shrink-0" />
-                <span key={lang} className="lang-swap">
-                  {t.eyebrow}
+                <span>
+                  <ScrambleText text={t.eyebrow} />
                 </span>
               </p>
               <LangSwitch lang={lang} onChange={changeLang} label={t.langLabel} />
@@ -143,9 +158,7 @@ export default function App() {
                 className="enter max-w-2xl md:max-w-[calc(100%-12rem)] lg:max-w-2xl text-[17px] leading-relaxed text-steel-300 sm:text-lg"
                 style={{ animationDelay: '420ms' }}
               >
-                <span key={lang} className="lang-swap">
-                  {t.lede}
-                </span>
+                <LangSwap>{t.lede}</LangSwap>
               </p>
               <div
                 className="enter absolute right-0 -bottom-14 hidden w-40 md:block lg:-bottom-28 lg:w-52"
@@ -178,7 +191,7 @@ export default function App() {
                   onClick={() => changeTab(id)}
                   aria-current={active ? 'page' : undefined}
                   whileTap={{ scale: 0.97 }}
-                  className={`relative flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-[15px] font-semibold transition-colors duration-200 ${
+                  className={`relative flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-[15px] select-none font-semibold transition-colors duration-200 ${
                     active ? 'text-steel-950' : 'text-steel-400 [@media(hover:hover)]:hover:text-steel-100'
                   }`}
                 >
@@ -190,7 +203,9 @@ export default function App() {
                     />
                   ) : null}
                   <Icon className="relative size-[18px] shrink-0" strokeWidth={2.2} />
-                  <span className="relative">{t.tabs[id]}</span>
+                  <span className="relative">
+                    <ScrambleText text={t.tabs[id]} />
+                  </span>
                 </motion.button>
               )
             })}
@@ -250,11 +265,11 @@ export default function App() {
               <p className="flex shrink-0 items-center gap-2 text-steel-400">
                 <Terminal className="size-4 shrink-0 text-brass-400" strokeWidth={2} />
                 <span className="font-mono">
-                  {t.footer.formula} 2<sup>E</sup>/2
+                  <ScrambleText text={t.footer.formula} /> 2<sup>E</sup>/2
                 </span>
               </p>
               <p className="max-w-xl sm:text-right">
-                {t.footer.note}
+                <LangSwap>{t.footer.note}</LangSwap>
               </p>
             </div>
 
@@ -299,7 +314,7 @@ function LangSwitch({ lang, onChange, label }) {
             aria-label={names[code]}
             aria-pressed={active}
             onClick={() => onChange(code)}
-            className={`relative h-8 min-w-11 rounded-full px-3 font-mono text-[13px] font-semibold uppercase tracking-wider transition-colors duration-200 after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-[''] active:scale-95 ${
+            className={`relative h-8 min-w-11 rounded-full px-3 font-mono select-none text-[13px] font-semibold uppercase tracking-wider transition-colors duration-200 after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-[''] active:scale-95 ${
               active ? 'text-steel-950' : 'text-steel-400 [@media(hover:hover)]:hover:text-steel-100'
             }`}
           >

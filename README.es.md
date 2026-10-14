@@ -40,8 +40,10 @@ src/
 Diseño: acero grafito con acento latón (Archivo, Geist y Geist Mono). Las animaciones usan
 `motion` y respetan `prefers-reduced-motion`.
 
-Idioma: español o inglés según el navegador (`es-*` → español, resto → inglés), con selector
-ES/EN; la elección se guarda en `localStorage`.
+Idioma: español en `/` e inglés en `/en/`, cada uno con su título y su vista previa al compartir.
+En la raíz se detecta el navegador (`es-*` → español, resto → inglés); el selector ES/EN cambia la
+URL y guarda la elección en `localStorage`. Al cambiar, los títulos giran como tambores y los
+párrafos se revelan con un barrido.
 
 ## Criptografía y métricas
 

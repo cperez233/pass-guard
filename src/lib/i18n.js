@@ -9,8 +9,25 @@
 export const LANGS = ['es', 'en']
 const STORAGE_KEY = 'passguard-lang'
 
-/** Idioma inicial: el guardado, si no el del navegador (español → es, resto → en). */
+/** `/en/` (o `/en`) al final de la ruta indica inglés; la raíz, sin preferencia. */
+function langFromPath() {
+  if (typeof window === 'undefined') return null
+  return /\/en\/?$/.test(window.location.pathname) ? 'en' : null
+}
+
+/** Ruta de cada idioma conservando el prefijo en el que viva la app. */
+export function pathForLang(lang, pathname) {
+  const base = pathname.replace(/\/en\/?$/, '/').replace(/\/index\.html$/, '/')
+  return lang === 'en' ? `${base.replace(/\/$/, '')}/en/` : base
+}
+
+/**
+ * Idioma inicial: el de la URL (/en/ es un enlace explícito), si no el guardado,
+ * si no el del navegador (español → es, resto → en).
+ */
 export function detectLang() {
+  const fromPath = langFromPath()
+  if (fromPath) return fromPath
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (LANGS.includes(saved)) return saved
